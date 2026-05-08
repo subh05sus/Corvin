@@ -2,32 +2,30 @@
 
 <p align="center">
   <a href="https://corvin.dev">
-    <img src="assets/corvin-logo.png" alt="Corvin" width="500">
+    <img src="https://raw.githubusercontent.com/subh05sus/Corvin/main/assets/corvin-logo.png" alt="Corvin" width="500">
   </a>
 </p>
 
 > Real-time AI debugging for running applications
 
-[![Beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/corvin-ai/cli)
-[![npm](https://img.shields.io/npm/v/@corvin/cli?style=flat-square)](https://www.npmjs.com/package/@corvin/cli)
+[![Beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/subh05sus/Corvin)
+[![npm](https://img.shields.io/npm/v/corvin-cli?style=flat-square)](https://www.npmjs.com/package/corvin-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 Capture logs automatically, search your codebase in natural language, and chat with an AI that understands your entire system.
-
-![loading animation](assets/corvin.gif)
 
 ---
 
 ## Status
 
-🚧 **Beta** - Corvin is actively developed and maintained. We ship updates regularly and welcome feedback.
+Beta - Corvin is actively developed and maintained. We ship updates regularly and welcome feedback.
 
 ---
 
 ## Installation
 
 ```bash
-npm install -g @corvin/cli
+npm install -g corvin-cli
 ```
 
 ## Quick Start
@@ -36,7 +34,7 @@ npm install -g @corvin/cli
 
 ```bash
 # Terminal 1: Start the AI assistant
-debug
+corvin
 ```
 
 You'll be prompted to log in and paste an API key from [app.corvin.dev](https://app.corvin.dev).
@@ -45,29 +43,12 @@ You'll be prompted to log in and paste an API key from [app.corvin.dev](https://
 
 ```bash
 # Terminal 2: Run any command with debugging
-debug npm run dev
-debug python app.py
-debug docker-compose up
+corvin npm run dev
+corvin python app.py
+corvin docker-compose up
 ```
 
 Your application runs normally with logs visible. Behind the scenes, Corvin captures logs, accesses your codebase locally, and makes everything available to the AI assistant running in Terminal 1.
-
----
-
-## 🎯 Try the Interactive Demo
-
-**New to Corvin?** See it debug 3 realistic bugs in under 5 minutes—no installation required.
-
-[![Try Demo in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/corvin-ai/demo?quickstart=1)
-
-**What's included:**
-- 2 microservices with real bugs (schema drift, config errors, race conditions)
-- Step-by-step walkthroughs of Corvin investigating each issue
-- See exactly how Corvin correlates logs and searches code across services
-
-Perfect for understanding Corvin's capabilities before connecting your own services.
-
-[View demo repository →](https://github.com/corvin-ai/demo)
 
 ---
 
@@ -92,7 +73,7 @@ Search in natural language: "where do we handle payment webhooks?" The AI search
 ```
 Terminal 1: AI Assistant          Terminal 2: Your Service
 ┌─────────────────────────┐       ┌──────────────────────────┐
-│ $ debug                 │       │ $ debug npm run dev      │
+│ $ corvin                │       │ $ corvin npm run dev     │
 │                         │       │ Server running on :3000  │
 │ You: "Why is auth       │       │ [logs stream normally]   │
 │      failing?"          │       │                          │
@@ -108,7 +89,7 @@ Terminal 1: AI Assistant          Terminal 2: Your Service
                             │ WebSocket
                             ↓
                 ┌────────────────────────────┐
-                │   Corvin AI Server        │
+                │   Corvin AI Server         │
                 │                            │
                 │  ┌──────────────────────┐  │
                 │  │   Agent Graph        │  │
@@ -119,8 +100,8 @@ Terminal 1: AI Assistant          Terminal 2: Your Service
                 └────────────────────────────┘
 ```
 
-1. `debug` starts the AI assistant and connects to a local cluster server
-2. `debug <command>` runs your service and streams logs to the cluster
+1. `corvin` starts the AI assistant and connects to a local cluster server
+2. `corvin <command>` runs your service and streams logs to the cluster
 3. Local cluster connects to Corvin AI server via WebSocket
 4. Agent Graph processes queries, searches code, and analyzes logs
 5. Responses flow back through cluster to your terminal
@@ -137,7 +118,7 @@ Your codebase is accessed locally and never uploaded. Only specific code snippet
 
 **Selective log sharing**
 
-Logs are streamed to the server only when the AI needs them to answer your questions. You control what runs with `debug <command>`.
+Logs are streamed to the server only when the AI needs them to answer your questions. You control what runs with `corvin <command>`.
 
 **API key authentication**
 
@@ -149,7 +130,7 @@ All requests are authenticated with your personal API key from [app.corvin.dev](
 
 To run your own Corvin server:
 
-1. Clone the [server repository](https://github.com/corvin-ai/server)
+1. Clone the [server repository](https://github.com/subh05sus/Corvin)
 2. Configure with your Gemini API key
 3. Point the CLI to your server:
 
@@ -157,8 +138,6 @@ To run your own Corvin server:
 export WEB_SOCKET_URL=ws://localhost:3000/v2/ws
 export API_BASE_URL=http://localhost:3000/v2/api
 ```
-
-See the [server README](https://github.com/corvin-ai/server) for full setup instructions.
 
 ---
 
@@ -168,15 +147,15 @@ See the [server README](https://github.com/corvin-ai/server) for full setup inst
 
 ```bash
 # Terminal 1: AI Assistant
-debug
+corvin
 
 # Terminal 2: Backend
 cd backend
-debug npm run dev
+corvin npm run dev
 
 # Terminal 3: Frontend
 cd frontend
-debug npm start
+corvin npm start
 
 # Back to Terminal 1 (AI)
 > "Users can't log in, what's wrong?"
@@ -205,17 +184,17 @@ Corvin coordinates debugging agents that see what's actually happening when your
 
 **Start AI assistant:**
 ```bash
-debug
+corvin
 ```
 
 **Run with debugging:**
 ```bash
-debug <any-command>
+corvin <any-command>
 ```
 
 **Open browser UI:**
 ```bash
-debug studio
+corvin studio
 ```
 
 ---
@@ -224,10 +203,10 @@ debug studio
 
 ### First-Time Project Setup
 
-When you run `debug <command>` for the first time in a directory, Corvin will:
+When you run `corvin <command>` for the first time in a directory, Corvin will:
 
 1. Prompt for a project description
-2. Create an `corvin.yaml` file
+2. Create a `corvin.yaml` file
 3. Register the service with the local cluster
 
 Example `corvin.yaml`:
@@ -247,8 +226,8 @@ On subsequent runs, Corvin uses the existing configuration automatically.
 Override defaults by setting these in `~/.corvin/config` or as environment variables:
 
 ```bash
-API_BASE_URL=https://api.corvin.dev/v2/api
-WEB_SOCKET_URL=wss://api.corvin.dev/v2/ws
+API_BASE_URL=https://corvin-api.thatdevguy.in/v2/api
+WEB_SOCKET_URL=wss://corvin-api.thatdevguy.in/v2/ws
 CORVIN_CLUSTER_URL=ws://127.0.0.1:4466
 ```
 
@@ -275,14 +254,6 @@ Current shortcuts are shown in the bottom status bar.
 
 ---
 
-## Documentation
-
-For advanced usage, custom integrations, and troubleshooting:
-
-**[Full Documentation →](https://docs.corvin.dev/)**
-
----
-
 ## Contributing
 
 The codebase is designed to be readable and hackable:
@@ -297,8 +268,7 @@ Pull requests and issues welcome!
 
 ## Support
 
-- [Documentation](https://docs.corvin.dev/)
-- [GitHub Issues](https://github.com/corvin-ai/cli/issues)
+- [GitHub Issues](https://github.com/subh05sus/Corvin/issues)
 
 ---
 

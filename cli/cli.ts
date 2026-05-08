@@ -24,7 +24,7 @@ API_KEY=
 
 function isCustomBackend(): boolean {
   const url = config.api_base_url || "";
-  const defaultProdUrl = "https://api.corvin.dev/v2/api";
+  const defaultProdUrl = "https://corvin-api.thatdevguy.in/v2/api";
   return !!url && url !== defaultProdUrl;
 }
 

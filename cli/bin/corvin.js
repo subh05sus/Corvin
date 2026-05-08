@@ -46,7 +46,7 @@ import { getConfigValue } from "../dist/helpers/cli-helpers.js";
 
 const API_BASE_URL = getConfigValue(
   "API_BASE_URL",
-  "https://api.corvin.dev/v2/api"
+  "https://corvin-api.thatdevguy.in/v2/api"
 );
 
 async function fetchYamlName(description, cwdPath = process.cwd()) {
