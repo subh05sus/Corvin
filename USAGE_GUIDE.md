@@ -28,17 +28,9 @@ Run this once on a new machine:
 corvin init
 ```
 
-It creates `~/.corvin/config` where your API key lives. It also walks you through creating a `corvin.yaml` for the current project.
+It creates `~/.corvin/config` and walks you through creating a `corvin.yaml` for the current project.
 
-### 2. Add your API key
-
-Edit `~/.corvin/config`:
-
-```
-API_KEY=your_api_key_here
-```
-
-Get your key from the Corvin web studio.
+> **Note:** The `API_KEY` field in `~/.corvin/config` is a legacy placeholder from an earlier version of the CLI. The current server does not enforce API key authentication — you can leave it blank or set it to any non-empty value to satisfy the startup check (e.g. `API_KEY=local`). If you are running your own server and have added an auth layer, put your key there.
 
 ---
 
