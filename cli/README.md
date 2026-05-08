@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://corvin.dev">
-    <img src="https://raw.githubusercontent.com/subh05sus/Corvin/main/assets/corvin-logo.png" alt="Corvin" width="500">
+    <img src="https://raw.githubusercontent.com/subh05sus/Corvin/main/cli/assets/corvin-logo.png" alt="Corvin" width="500">
   </a>
 </p>
 
