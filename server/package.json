@@ -10,7 +10,7 @@
     "dev": "tsnd --transpile-only --respawn --exit-child src/server.ts",
     "start": "NODE_ENV=DEVELOPMENT node build/src/server.js",
     "build": "swc src -d dist --source-maps --copy-files && mkdir -p dist/src/views && cp -r src/views/* dist/src/views/ 2>/dev/null || true",
-    "build:tsc": "tsc && tsc-alias && mkdir -p build/src/views && cp -r src/views/* build/src/views/ && echo 'Build Completed Success'",
+    "build:tsc": "tsc && tsc-alias && mkdir -p build/src/views && (cp -r src/views/* build/src/views/ 2>/dev/null || true) && echo 'Build Completed Success'",
     "lint": "eslint --ignore-path .gitignore --ext .ts src/",
     "lint:fix": "npm run lint -- --fix"
   },
