@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(redis-cli ping *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npm run *)",
+      "Bash(Start-Sleep -Seconds 4)",
+      "Bash(Get-Content \"D:\\\\Projects\\\\Corvin\\\\server\\\\server.log\" -ErrorAction SilentlyContinue)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3001/)",
+      "Bash(curl -s http://localhost:3002/)",
+      "Bash(curl -s http://localhost:3000/health)",
+      "Bash(curl -s http://localhost:3001/orders)",
+      "Bash(curl -s http://localhost:3002/checkout)",
+      "Bash(curl -s http://localhost:3000/v2/api/)",
+      "Bash(curl -s http://localhost:3001/health)",
+      "Bash(curl -s http://localhost:3002/health)",
+      "Bash(curl *)",
+      "Bash(npx tsx *)",
+      "PowerShell(New-Item *)",
+      "Bash(python3 *)"
+    ]
+  }
+}

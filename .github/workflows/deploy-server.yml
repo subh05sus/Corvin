@@ -1,0 +1,321 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Deploy Server → EC2
+#
+# Triggered on every push to main that touches server/ files, or manually.
+#
+# Pipeline stages:
+#   prechecks (parallel)
+#     ├── typecheck   → tsc --noEmit
+#     └── lint        → eslint
+#   build             → compile TS, upload artifact
+#   deploy            → SSH to EC2, pull, install, build, reload PM2
+#                       rolls back automatically if health check fails
+#
+# Required GitHub Secrets  (Settings → Secrets → Actions):
+#   EC2_SSH_KEY   — PEM private key content (paste the whole file)
+#   EC2_HOST      — ec2-52-7-14-144.compute-1.amazonaws.com
+#   EC2_USER      — subh
+#
+# Required GitHub Variable (Settings → Variables → Actions):
+#   SERVER_APP_DIR — /opt/corvin/server   (path on the EC2)
+#
+# One-time EC2 setup:  see the bottom of this file.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Deploy Server → EC2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - ".github/workflows/deploy-server.yml"
+  workflow_dispatch:
+    inputs:
+      skip_prechecks:
+        description: "Skip typecheck + lint (emergency deploy only)"
+        type: boolean
+        default: false
+
+# Never run two deploys in parallel — queue the second one.
+concurrency:
+  group: deploy-server-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "20"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 1 — PRECHECKS (run in parallel)
+# ─────────────────────────────────────────────────────────────────────────────
+
+jobs:
+  typecheck:
+    name: "Precheck / TypeScript"
+    if: ${{ !inputs.skip_prechecks }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check (no emit)
+        run: npx tsc --noEmit
+
+  # ───────────────────────────────────────────────────────────────────────────
+
+  lint:
+    name: "Precheck / Lint"
+    if: ${{ !inputs.skip_prechecks }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 2 — BUILD
+# ─────────────────────────────────────────────────────────────────────────────
+
+  build:
+    name: "Build / Compile"
+    # Runs after prechecks.  If prechecks were skipped (emergency dispatch),
+    # `always() && !failure() && !cancelled()` lets build proceed anyway.
+    needs: [typecheck, lint]
+    if: always() && !failure() && !cancelled()
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npx tsc && npx tsc-alias
+
+      - name: Copy static views (if any)
+        run: |
+          mkdir -p build/src/views
+          cp -r src/views/* build/src/views/ 2>/dev/null || true
+
+      - name: Verify entry point exists
+        run: test -f build/src/server.js || (echo "build/src/server.js not found" && exit 1)
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-build-${{ github.sha }}
+          path: server/build/
+          retention-days: 3
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 3 — DEPLOY
+# ─────────────────────────────────────────────────────────────────────────────
+
+  deploy:
+    name: "Deploy / EC2"
+    needs: build
+    runs-on: ubuntu-latest
+    # Requires a GitHub Environment named "production".
+    # Add required reviewers there if you want manual approval before deploy.
+    environment:
+      name: production
+      url: http://ec2-52-7-14-144.compute-1.amazonaws.com:3000/v2/api/health/
+    steps:
+      - name: Checkout (for SHA reference)
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          # Stop entire script on first error (set -e)
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            # ── Load NVM (non-interactive shells don't source .bashrc) ────────
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            APP_DIR="${{ vars.SERVER_APP_DIR || '/opt/corvin/server' }}"
+
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "  Corvin Server — Deploy"
+            echo "  Commit : ${{ github.sha }}"
+            echo "  Actor  : ${{ github.actor }}"
+            echo "  App dir: $APP_DIR"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            # ── Guard: ensure the app directory exists ────────────────────────
+            if [ ! -d "$APP_DIR" ]; then
+              echo "ERROR: $APP_DIR does not exist on this server."
+              echo "Run the one-time setup from deployment.md first."
+              exit 1
+            fi
+
+            cd "$APP_DIR"
+
+            # ── [1/6] Save rollback point ─────────────────────────────────────
+            echo ""
+            echo "[1/6] Saving rollback point…"
+            PREV_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "none")
+            echo "      Previous commit: $PREV_COMMIT"
+
+            # ── [2/6] Pull latest code ────────────────────────────────────────
+            echo ""
+            echo "[2/6] Pulling latest code…"
+            git fetch origin main --quiet
+            git reset --hard origin/main
+            echo "      Now at: $(git rev-parse HEAD)"
+
+            # ── [3/6] Install dependencies ────────────────────────────────────
+            echo ""
+            echo "[3/6] Installing dependencies…"
+            npm ci --prefer-offline --loglevel=error
+
+            # ── [4/6] Build ───────────────────────────────────────────────────
+            echo ""
+            echo "[4/6] Building…"
+            npx tsc && npx tsc-alias
+            mkdir -p build/src/views
+            cp -r src/views/* build/src/views/ 2>/dev/null || true
+            echo "      Entry point: $(ls -lh build/src/server.js)"
+
+            # ── [5/6] Reload PM2 ──────────────────────────────────────────────
+            echo ""
+            echo "[5/6] Reloading PM2…"
+            if pm2 list | grep -q "clippy-api-v2"; then
+              pm2 reload ecosystem.config.js --update-env
+            else
+              pm2 start ecosystem.config.js
+            fi
+            pm2 save --force
+
+            # ── [6/6] Health check + rollback on failure ───────────────────────
+            echo ""
+            echo "[6/6] Health check…"
+            sleep 6
+
+            HEALTH_URL="http://localhost:3000/v2/api/health/"
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
+
+            if [ "$HTTP_STATUS" != "200" ]; then
+              echo ""
+              echo "╔═══════════════════════════════════════════╗"
+              echo "║  ❌ HEALTH CHECK FAILED (HTTP $HTTP_STATUS)   ║"
+              echo "║  Rolling back to $PREV_COMMIT             ║"
+              echo "╚═══════════════════════════════════════════╝"
+
+              if [ "$PREV_COMMIT" != "none" ]; then
+                git reset --hard "$PREV_COMMIT"
+                npm ci --prefer-offline --loglevel=error
+                npx tsc && npx tsc-alias
+                mkdir -p build/src/views
+                cp -r src/views/* build/src/views/ 2>/dev/null || true
+                pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js
+                pm2 save --force
+                echo "      Rollback complete. Running: $PREV_COMMIT"
+              else
+                echo "      No previous commit to roll back to."
+              fi
+
+              exit 1
+            fi
+
+            echo ""
+            echo "╔═══════════════════════════════════════════╗"
+            echo "║  ✅ Deploy successful                      ║"
+            echo "╚═══════════════════════════════════════════╝"
+            echo ""
+            pm2 list
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ONE-TIME EC2 SETUP  (run once by hand, not by CI)
+#
+# SSH into the instance:
+#   ssh -i your-key.pem subh@ec2-52-7-14-144.compute-1.amazonaws.com
+#
+# Then run:
+#
+#   # 1. Node via NVM
+#   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+#   source ~/.bashrc
+#   nvm install 20 && nvm use 20 && nvm alias default 20
+#
+#   # 2. PM2
+#   npm install -g pm2
+#   pm2 startup   # run the printed command so PM2 survives reboots
+#
+#   # 3. Clone repo
+#   sudo mkdir -p /opt/corvin && sudo chown subh:subh /opt/corvin
+#   git clone <your-repo-url> /opt/corvin
+#   # -OR- if repo is private:
+#   # git clone git@github.com:<org>/<repo>.git /opt/corvin
+#
+#   # 4. Create server .env
+#   cp /opt/corvin/server/.env.example /opt/corvin/server/.env   # if you have one
+#   nano /opt/corvin/server/.env
+#   # Fill in: GEMINI_API_KEY, REDIS_URL, NODE_ENV=production, PORT=3000
+#
+#   # 5. First manual deploy (same as CI script)
+#   cd /opt/corvin/server
+#   npm ci
+#   npx tsc && npx tsc-alias
+#   pm2 start ecosystem.config.js
+#   pm2 save
+#
+# GitHub Secrets to add  (Settings → Secrets → Actions):
+#   EC2_SSH_KEY   → contents of the .pem file
+#   EC2_HOST      → ec2-52-7-14-144.compute-1.amazonaws.com
+#   EC2_USER      → subh
+#
+# GitHub Variable to add  (Settings → Variables → Actions):
+#   SERVER_APP_DIR → /opt/corvin/server
+#
+# GitHub Environment to create  (Settings → Environments):
+#   Name: production
+#   (Optional) Add required reviewers for manual approval before deploy
+# ─────────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,16 @@
+{
+  "remote.portsAttributes": {
+    "4173": {
+      "label": "Corvin Studio",
+      "onAutoForward": "openBrowser"
+    },
+    "3001": {
+      "label": "Orders Service",
+      "onAutoForward": "notify"
+    },
+    "3002": {
+      "label": "Checkout Service",
+      "onAutoForward": "notify"
+    }
+  }
+}

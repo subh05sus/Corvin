@@ -1,0 +1,36 @@
+{
+  "name": "Corvin Demo",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "forwardPorts": [3001, 3002, 4173, 4466],
+  "portsAttributes": {
+    "3001": {
+      "label": "Orders Service",
+      "onAutoForward": "silent"
+    },
+    "3002": {
+      "label": "Checkout Service",
+      "onAutoForward": "silent"
+    },
+    "4173": {
+      "label": "Corvin Studio",
+      "onAutoForward": "openBrowser"
+    },
+    "4466": {
+      "label": "Corvin Server",
+      "onAutoForward": "silent",
+      "visibility": "public"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

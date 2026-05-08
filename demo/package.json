@@ -1,0 +1,23 @@
+{
+  "name": "corvin-demo",
+  "version": "1.0.0",
+  "description": "Multi-service debugging demo for Corvin",
+  "private": true,
+  "scripts": {
+    "install:all": "cd orders-service && npm install && cd ../checkout-service && npm install",
+    "build:all": "cd orders-service && npm run build && cd ../checkout-service && npm run build",
+    "demo": "bash scripts/demo-launcher.sh",
+    "demo:cleanup": "bash scripts/cleanup.sh",
+    "demo:bug1": "tsx test-scenarios/contract-drift.ts",
+    "demo:bug2": "tsx test-scenarios/missing-tax.ts",
+    "demo:bug3": "tsx test-scenarios/payment-timeout.ts"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "chalk": "^4.1.2",
+    "tsx": "^4.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
