@@ -52,18 +52,18 @@ export function printHelp() {
   console.log(`Corvin — AI debugging copilot for running applications
 
 Usage:
-  debug <your command>
+  corvin <your command>
 
 Corvin requires a local server to be running:
-  debug
+  corvin
 
 Run your app with Corvin watching it:
-  debug <your command>
+  corvin <your command>
 
   Examples:
-    debug npm run start
-    debug node server.js
-    debug python app.py
+    corvin npm run start
+    corvin node server.js
+    corvin python app.py
 
 Commands:
   login <key>  save your Corvin API key
@@ -78,13 +78,13 @@ Use --help with individual commands for details.
 
 //print init help
 export function printInitHelp() {
-  console.log(`Register a process with an Corvin project.
+  console.log(`Register a process with a Corvin project.
 
-An Corvin project groups multiple processes together
+A Corvin project groups multiple processes together
 so their runtime signals can be referenced in the same context.
 
 Usage:
-  debug init --id <project-id> -m "<process description>"
+  corvin init --id <project-id> -m "<process description>"
 
 Options:
   --id    Project identifier used to group related processes
@@ -121,14 +121,14 @@ so their runtime signals (logs, errors, requests) can be
 referenced together.
 
 This command must be running before you execute:
-  debug <your command>
+  corvin <your command>
 
 Usage:
-  debug
+  corvin
 
 Notes:
   • Keep this running in a separate terminal
-  • Run each service or process using "debug <your command>"
+  • Run each service or process using "corvin <your command>"
   • Press Ctrl+C to stop the server
 `);
 }

@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import os from "os";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { pendingKeys } from "@/lib/cli-auth-store";
 import {
   generateApiKey,
   generateOneTimeCode,
@@ -90,11 +89,10 @@ export default async function AuthorizePage({ searchParams }: AuthorizePageProps
         userId: session.user.id,
         apiKeyId: created.id,
         codeHash: hashCode(code),
+        pendingApiKey: apiKey,
         status: "approved",
       },
     });
-
-    pendingKeys.put(state, apiKey);
 
     redirect(`http://127.0.0.1:${reqRow.callbackPort}/callback?state=${state}&code=${code}`);
   }

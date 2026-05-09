@@ -105,7 +105,7 @@ share runtime context while the Corvin server is running.
 
 Next:
   Start the Corvin interface:
-    debug
+    corvin
 `);
     } else {
       console.log(`Project registered with Corvin.
@@ -118,7 +118,7 @@ share runtime context while the Corvin server is running.
 
 Next:
   Start the Corvin interface:
-    debug
+    corvin
 `);
     }
     process.exit(0);
@@ -207,7 +207,7 @@ Generate a key from the dashboard at ${webDashboardUrl}/dashboard\n`);
 async function handleConfig(argsList) {
   if (!fs.existsSync(CONFIG_PATH)) {
     console.error(
-      "No Corvin configuration found. Run \`debug init\` first."
+      "No Corvin configuration found. Run \`corvin init\` first."
     );
     process.exit(1);
   }
@@ -416,7 +416,7 @@ async function main() {
       `\nCorvin server is not running.
 
 Start it in another terminal:
-  debug
+  corvin
 \n`
     );
     process.exit(1);

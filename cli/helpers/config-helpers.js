@@ -67,7 +67,7 @@ export function parseConfigFlags(argsList) {
         console.error(`Missing project ID.
 
 Usage:
-  debug init --id <project-id> [-m "<description>"]`);
+  corvin init --id <project-id> [-m "<description>"]`);
         process.exit(1);
       }
       projectId = next.trim();
@@ -85,7 +85,7 @@ Each process needs a short description so it can
 be referenced later in conversations.
 
 Usage:
-  debug init -id <project-id> -m "<process description>"
+  corvin init -id <project-id> -m "<process description>"
 `);
         process.exit(1);
       }
@@ -100,7 +100,7 @@ Each process needs a short description so it can
 be referenced later in conversations.
 
 Usage:
-  debug init -id <project-id> -m "<process description>"
+  corvin init -id <project-id> -m "<process description>"
 `);
     process.exit(1);
   }

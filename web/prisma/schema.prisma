@@ -91,15 +91,16 @@ model ApiKey {
 // On approval the dashboard issues a short-lived one-time `code` (hashed
 // here) which the CLI exchanges for the actual API key at /api/cli/exchange.
 model CliAuthRequest {
-  id           String   @id @default(cuid())
-  state        String   @unique
-  codeHash     String?  @unique
-  callbackPort Int
-  userId       String?
-  apiKeyId     String?
-  status       String   @default("pending") // pending | approved | exchanged | denied | expired
-  createdAt    DateTime @default(now())
-  expiresAt    DateTime
+  id            String   @id @default(cuid())
+  state         String   @unique
+  codeHash      String?  @unique
+  pendingApiKey String?  // plaintext key, held only until /api/cli/exchange consumes it
+  callbackPort  Int
+  userId        String?
+  apiKeyId      String?
+  status        String   @default("pending") // pending | approved | exchanged | denied | expired
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime
 
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   apiKey ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)

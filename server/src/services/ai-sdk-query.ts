@@ -9,9 +9,6 @@ import { z } from "zod";
 import socketManager from "../utils/socketManager";
 import redisClient from "../utils/redis";
 import { config } from "../config";
-import { readFileSync } from "fs";
-import path from "path";
-
 
 /** Max tool-calling steps before stopping (same idea as AI SDK default). */
 export const MAX_STEPS = 20;
@@ -66,11 +63,7 @@ Keep it short; expand only if needed. Prefer:
 5. Why this fixes the issue
 If the answer does not involve code changes, give a simple answer and skip the above structure.`;
 
-  const d = readFileSync(path.join(__dirname + '/gpt.txt')).toString('ascii');
-
-  const borrowed = d.replace('${architecture}', architecture);
-
-  return borrowed;
+  return original;
 }
 
 export function createTools(authKey?: string): Record<string, ReturnType<typeof tool>> {

@@ -10,7 +10,7 @@ import React, {
 import { useInput, useApp, render, Box, Text, useStdout } from "ink";
 import stringWidth from "string-width";
 import sliceAnsi from "slice-ansi";
-import { spawn as ptySpawn } from "node-pty";
+import { spawn as cpSpawn, spawnSync as cpSpawnSync } from "child_process";
 import TextInput from "ink-text-input";
 import * as dotenv from "dotenv";
 import { marked } from "marked";
@@ -350,17 +350,7 @@ export const App: React.FC = () => {
       if (stdout?.rows) setTerminalRows(stdout.rows);
       if (stdout?.columns) setTerminalCols(stdout.columns);
 
-      // Use full terminal width for native terminal experience
-      const cols = Math.max(10, stdout?.columns || 80);
-      const rows = Math.max(1, stdout?.rows || 20);
-
-      if (ptyAliveRef.current && ptyRef.current) {
-        try {
-          ptyRef.current.resize(cols, rows);
-        } catch {
-          //ignore
-        }
-      }
+      // intentionally no resize — child_process does not support PTY resize
     };
 
     process.stdout.on("resize", handleResize);
@@ -400,18 +390,18 @@ export const App: React.FC = () => {
 
       socket.onerror = () => {
         setClusterConnected(false);
-        setClusterError("Connection error. Is Corvin running? (Run `debug` in another terminal.)");
+        setClusterError("Connection error. Is Corvin running? (Run `corvin` in another terminal.)");
         clusterSocketRef.current = null;
       };
 
       socket.onclose = () => {
         setClusterConnected(false);
-        setClusterError("Run `debug` in another terminal to reconnect.");
+        setClusterError("Run `corvin` in another terminal to reconnect.");
         clusterSocketRef.current = null;
       };
     } catch (error) {
       setClusterConnected(false);
-      setClusterError("Failed to connect. Is Corvin running? (Run `debug` in another terminal.)");
+      setClusterError("Failed to connect. Is Corvin running? (Run `corvin` in another terminal.)");
     }
 
     return () => {
@@ -454,17 +444,14 @@ export const App: React.FC = () => {
   // Prefer a known-good shell over a potentially broken $SHELL on some machines
   function getSafeShell(): string {
     const candidates = [
-      process.env.SHELL, // user-configured shell
+      process.env.SHELL,
       "/bin/zsh",
       "/bin/bash",
     ].filter(Boolean) as string[];
 
     for (const shell of candidates) {
       try {
-        // Synchronously test if the shell is executable by spawning a no-op command.
-        // Use child_process directly to avoid triggering node-pty in this probe.
-        const { spawnSync } = require("child_process");
-        const res = spawnSync(shell, ["-c", "echo"], { stdio: "ignore" });
+        const res = cpSpawnSync(shell, ["-c", "echo"], { stdio: "ignore" });
         if (res.status === 0) {
           return shell;
         }
@@ -473,31 +460,26 @@ export const App: React.FC = () => {
       }
     }
 
-    // Fallback to a generic bash lookup; node-pty will still error if it's truly missing,
-    // but this avoids depending on a bad $SHELL value.
     return "bash";
   }
 
-  // Stable function to run bash command: uses full terminal dimensions
+  // Stable function to run bash command
   const runBashCommandWithPipe = useCallback((command: string) => {
     const shell = getSafeShell();
-    const cols = Math.max(10, terminalColsRef.current);
-    const rows = Math.max(1, terminalRowsRef.current);
 
-    ptyRef.current = ptySpawn(shell, ["-c", command], {
+    const cp = cpSpawn(shell, ["-c", command], {
       cwd: process.cwd(),
       env: process.env,
-      cols,
-      rows,
+      stdio: "pipe",
     });
+    ptyRef.current = cp;
     ptyAliveRef.current = true;
-    const ptyProcess = ptyRef.current;
 
-    ptyProcess.onData((chunk: string) => {
-      setUnTamperedLogs((oldLines) => oldLines + chunk);
-      logsManager.addChunk(chunk);
-      
-      // Stream logs to cluster server for global access
+    const handleChunk = (chunk: Buffer) => {
+      const str = chunk.toString();
+      setUnTamperedLogs((oldLines) => oldLines + str);
+      logsManager.addChunk(str);
+
       if (clusterSocketRef.current && clusterSocketRef.current.readyState === WebSocket.OPEN) {
         const metadata = projectMetadataRef.current || loadProjectMetadata();
         if (metadata?.window_id) {
@@ -506,29 +488,19 @@ export const App: React.FC = () => {
               JSON.stringify({
                 type: "stream_logs",
                 window_id: metadata.window_id,
-                logs: chunk,
+                logs: str,
               })
             );
-            // Log first chunk to verify streaming is working
             if (!(clusterSocketRef.current as any).hasLoggedFirstChunk) {
-              // console.log(`[Cluster] ✅ Streaming first log chunk to cluster server. window_id: ${metadata.window_id}, chunk size: ${chunk.length}`);
               (clusterSocketRef.current as any).hasLoggedFirstChunk = true;
             }
           } catch (error) {
             console.log(`[Cluster] ❌ Error streaming logs to cluster server: ${error}`);
           }
-        } else {
-          console.log(`[Cluster] ⚠️  Cannot stream logs: metadata.window_id is missing. Metadata:`, metadata);
-        }
-      } else {
-        // Log connection issues only once to avoid spam
-        if (clusterSocketRef.current && !(clusterSocketRef.current as any).hasLoggedConnectionIssue) {
-          console.log(`[Cluster] ⚠️  Cluster socket not ready. State: ${clusterSocketRef.current?.readyState}, OPEN=${WebSocket.OPEN}`);
-          (clusterSocketRef.current as any).hasLoggedConnectionIssue = true;
         }
       }
-      
-      let data = partialLine.current + chunk;
+
+      let data = partialLine.current + str;
       const lines = data.split("\n");
       partialLine.current = lines.pop() || "";
       if (lines.length > 0) {
@@ -536,13 +508,14 @@ export const App: React.FC = () => {
           key: `log-${logKeyCounter.current++}`,
           text: line,
         }));
-
-        // Append in single update
         setRawLogData((prevLines) => [...prevLines, ...newLines]);
       }
-    });
+    };
 
-    ptyProcess.onExit(({ exitCode }: { exitCode: number }) => {
+    cp.stdout?.on("data", handleChunk);
+    cp.stderr?.on("data", handleChunk);
+
+    cp.on("close", (exitCode: number | null) => {
       ptyAliveRef.current = false;
       ptyRef.current = null;
       if (partialLine.current.length > 0) {
@@ -555,15 +528,15 @@ export const App: React.FC = () => {
       }
       const exitLine: ContentLine = {
         key: `log-${logKeyCounter.current++}`,
-        text: `\n[Process exited with code ${exitCode}]\n`,
+        text: `\n[Process exited with code ${exitCode ?? 0}]\n`,
       };
       setRawLogData((prevLines) => [...prevLines, exitLine]);
     });
 
     return () => {
       try {
-        ptyProcess.kill();
-      } catch (e) {
+        cp.kill();
+      } catch {
         // ignore
       }
     };
