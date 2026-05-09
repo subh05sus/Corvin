@@ -110,7 +110,7 @@ const ChatApp: React.FC = () => {
     const key = loadApiKey();
     if (!key && !isCustomBackend()) {
       setError(
-        "No API_KEY found in ~/.corvin/config. Please run `debug login <auth-key>` first."
+        "No API_KEY found in ~/.corvin/config. Please run `corvin login <auth-key>` first."
       );
       return;
     }

@@ -9,6 +9,7 @@ class Config {
   public redis_port: number;
   public gemini_api_key: string;
   public minimum_cli_version: string;
+  public web_dashboard_url: string;
 
   constructor(env: NodeJS.ProcessEnv) {
     this.env = (env.NODE_ENV as Environments) || "development";
@@ -20,6 +21,7 @@ class Config {
     this.redis_port = this.getNumberValue(env.REDIS_PORT) || 6379;
     this.gemini_api_key = this.getStringValue(env.GEMINI_API_KEY);
     this.minimum_cli_version = this.getStringValue(env.MINIMUM_CLI_VERSION) || "1.0.12";
+    this.web_dashboard_url = env.WEB_DASHBOARD_URL?.trim() || "http://localhost:3001";
 
     // Validate required configs
     if (!this.gemini_api_key) {

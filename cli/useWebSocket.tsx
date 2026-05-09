@@ -136,7 +136,7 @@ export function useWebSocket(
 
   useEffect(() => {
     if (!IS_LOCAL_ENV && API_KEY === "") {
-      setConnectionError("No API_KEY found in ~/.corvin/config");
+      setConnectionError("No API_KEY found in ~/.corvin/config. Run: corvin login <auth-key>");
       logd("No API_KEY found in ~/.corvin/config");
       // process.exit();
     }

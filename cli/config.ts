@@ -12,4 +12,8 @@ export const config = {
     "API_BASE_URL",
     "https://corvin-api.thatdevguy.in/v2/api"
   ),
+  web_dashboard_url: getConfigValue(
+    "WEB_DASHBOARD_URL",
+    "http://localhost:3001"
+  ),
 };

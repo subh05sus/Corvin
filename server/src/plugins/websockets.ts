@@ -8,6 +8,7 @@ import redisClient from "../utils/redis";
 import { runAISdkQuery, type CoreMessage } from "../services/ai-sdk-query";
 import socketManager from "../utils/socketManager";
 import { STATIC_USER_ID } from "../utils/constants";
+import { validateAuthKey } from "../utils/auth";
 
 declare module "ws" {
   interface WebSocket {
@@ -449,7 +450,7 @@ async function websocketPlugin(fastify: FastifyInstance, opts: object) {
           console.log(
             `[handleRecurringConnection] serviceId: ${msg.serviceId}`
           );
-          
+
           if (!msg.serviceId) {
             console.log("[handleRecurringConnection] Missing serviceId");
             sendToSocket(socket, {
@@ -460,8 +461,29 @@ async function websocketPlugin(fastify: FastifyInstance, opts: object) {
             return;
           }
 
+          if (!msg.authKey || typeof msg.authKey !== "string") {
+            sendToSocket(socket, {
+              type: "auth_error",
+              message: "authKey is required. Run `corvin login` to obtain one.",
+              ts: Date.now(),
+            });
+            socket.close(4401, "auth_required");
+            return;
+          }
 
-          socket.userId = STATIC_USER_ID;
+          const userId = await validateAuthKey(msg.authKey);
+          if (!userId) {
+            sendToSocket(socket, {
+              type: "auth_error",
+              message:
+                "Invalid or revoked API key. Run `corvin login` to obtain a new one.",
+              ts: Date.now(),
+            });
+            socket.close(4403, "auth_invalid");
+            return;
+          }
+
+          socket.userId = userId;
           
           console.log(
             "[handleRecurringConnection] Setting socket for serviceId:",

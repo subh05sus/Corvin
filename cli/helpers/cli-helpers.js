@@ -66,6 +66,7 @@ Run your app with Corvin watching it:
     debug python app.py
 
 Commands:
+  login <key>  save your Corvin API key
   init         register the current project
   cluster      start the local Corvin server
   studio       open the local Studio web app (studio/dist)
@@ -96,6 +97,21 @@ Notes:
 
 `);
 }
+export function printLoginHelp() {
+  console.log(`Sign in to Corvin via your browser.
+
+Usage:
+  corvin login                    open browser, approve a new key, save it locally
+  corvin login --key <api-key>    headless mode: skip browser, validate and save
+
+The API key is saved to:
+  ~/.corvin/config
+
+For headless environments (no browser), generate a key from the dashboard
+and pass it with --key.
+`);
+}
+
 //print cluster help
 export function printClusterHelp() {
   console.log(`Start the local Corvin server for this project.

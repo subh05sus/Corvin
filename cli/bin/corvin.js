@@ -22,6 +22,7 @@ import {
   ensureClusterIsReady,
   printHelp,
   printInitHelp,
+  printLoginHelp,
 } from "../dist/helpers/cli-helpers.js";
 import {
   checkVersionAndExit,
@@ -131,24 +132,77 @@ Check directory permissions and try again.
   }
 }
 
-//check for valid auth key
-// const isValidAuthKey = async (authKey) => {
-//   try {
-//     const isValid = await axios.post(`${BASE_URL}/auth/login`, { authKey });
-//     return isValid.data;
-//   } catch (error) {
-//     if (error.response.message === "Invalid auth key") {
-//       console.error(`Authentication failed.
-//     The provided auth key is invalid or has expired.
-//     Get a new auth key from your Corvin account and try again.
-//     `);
-//     } else {
-//       console.error(" Failed to save auth key:", error);
-//     }
-//   }
-// };
+async function saveApiKeyToConfig(apiKey) {
+  ensureConfigDir();
+  let contents = "";
+  if (fs.existsSync(CONFIG_PATH)) {
+    contents = fs.readFileSync(CONFIG_PATH, "utf8");
+  }
+  const { upsertConfigValue } = await import(
+    "../dist/helpers/config-helpers.js"
+  );
+  const updated = upsertConfigValue(contents, "API_KEY", apiKey);
+  fs.writeFileSync(CONFIG_PATH, updated, "utf8");
+}
 
+async function validateApiKey(authKey, webDashboardUrl) {
+  const baseUrl = webDashboardUrl.replace(/\/$/, "");
+  try {
+    const resp = await axios.post(`${baseUrl}/api/cli/validate`, { authKey });
+    return !!resp.data?.valid;
+  } catch {
+    return false;
+  }
+}
 
+async function handleLogin(argsList) {
+  const { config: cliConfig } = await import("../dist/config.js");
+  const webDashboardUrl = cliConfig.web_dashboard_url;
+
+  // --key flag → headless mode: validate key with the dashboard then save.
+  const keyFlagIdx = argsList.findIndex((a) => a === "--key");
+  if (keyFlagIdx !== -1) {
+    const provided = argsList[keyFlagIdx + 1];
+    if (!provided || !provided.trim()) {
+      console.error("Missing value after --key.\n\nUsage:\n  corvin login --key <api-key>");
+      process.exit(1);
+    }
+    console.log("Validating API key…");
+    const ok = await validateApiKey(provided.trim(), webDashboardUrl);
+    if (!ok) {
+      console.error("\n❌ Invalid or revoked API key.\n");
+      process.exit(1);
+    }
+    await saveApiKeyToConfig(provided.trim());
+    console.log(`\n✅ API key saved to ${CONFIG_PATH}\n`);
+    process.exit(0);
+  }
+
+  // Default: browser flow.
+  const { browserLogin } = await import("../dist/helpers/browser-login.js");
+  try {
+    const { apiKey, email } = await browserLogin({ webDashboardUrl });
+    await saveApiKeyToConfig(apiKey);
+    console.log(
+      `\n✅ Signed in${email ? ` as ${email}` : ""}. Saved API key to ${CONFIG_PATH}\n`
+    );
+    console.log(`Next:
+  Register this project:
+    corvin init -m "describe this service"
+
+  Then start Corvin:
+    corvin
+`);
+    process.exit(0);
+  } catch (err) {
+    console.error(`\n❌ Login failed: ${err.message || String(err)}\n`);
+    console.error(`If you can't open a browser on this machine, run:
+  corvin login --key <api-key>
+
+Generate a key from the dashboard at ${webDashboardUrl}/dashboard\n`);
+    process.exit(1);
+  }
+}
 
 async function handleConfig(argsList) {
   if (!fs.existsSync(CONFIG_PATH)) {
@@ -312,6 +366,11 @@ async function main() {
   }
 
 
+  if (args[0] === "login" && (args[1] === "--help" || args[1] === "-h")) {
+    printLoginHelp();
+    process.exit(0);
+  }
+
   if (args[0] === "init" && (args[1] === "--help" || args[1] === "-h")) {
     printInitHelp();
     checkVersionCompatibility();
@@ -332,12 +391,17 @@ async function main() {
   });
 
   const command = args[0];
+  if (command === "login") {
+    projectRegistrationPromise.catch(() => null);
+    await handleLogin(args);
+    return;
+  }
+
   if (command === "init") {
     projectRegistrationPromise.catch(() => null);
     await handleInit(args);
     return;
   }
-
 
   if (command === "config") {
     projectRegistrationPromise.catch(() => null);
