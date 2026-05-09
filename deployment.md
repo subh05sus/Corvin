@@ -385,7 +385,7 @@ git push origin cli-v0.1.5
 
 ## Post-Deploy: Point CLI at Your Server
 
-By default the CLI connects to the hosted Corvin service (`wss://corvin-api.thatdevguy.in/v2/ws`). To use your own deployed server, set these in `~/.corvin/config`:
+By default the CLI connects to the hosted Corvin service (`wss://api.usecorvin.space/v2/ws`). To use your own deployed server, set these in `~/.corvin/config`:
 
 ```
 WEB_SOCKET_URL=wss://api.yourdomain.com/v2/ws
@@ -395,7 +395,7 @@ API_BASE_URL=https://api.yourdomain.com/v2/api
 Or pass them as environment variables per session:
 
 ```bash
-WEB_SOCKET_URL=wss://api.yourdomain.com/v2/ws debug
+WEB_SOCKET_URL=wss://api.usecorvin.space/v2/ws corvin
 ```
 
 > **Important:** Use `wss://` (TLS) for a production server with a domain and TLS cert.
@@ -428,8 +428,8 @@ WEB_SOCKET_URL=wss://api.yourdomain.com/v2/ws debug
 
 | Key | Default | Description |
 |---|---|---|
-| `WEB_SOCKET_URL` | `wss://corvin-api.thatdevguy.in/v2/ws` | WebSocket URL of the Corvin server |
-| `API_BASE_URL` | `https://corvin-api.thatdevguy.in/v2/api` | REST API base URL of the Corvin server |
+| `WEB_SOCKET_URL` | `wss://api.usecorvin.space/v2/ws` | WebSocket URL of the Corvin server |
+| `API_BASE_URL` | `https://api.usecorvin.space/v2/api` | REST API base URL of the Corvin server |
 
 ---
 

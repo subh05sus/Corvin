@@ -10,7 +10,7 @@ const CORVIN_DIR = path.join(os.homedir(), ".corvin");
 const VERSION_CACHE_FILE = path.join(CORVIN_DIR, "version-cache.json");
 const API_BASE_URL = getConfigValue(
   "API_BASE_URL",
-  "https://corvin-api.thatdevguy.in/v2/api"
+  "https://api.usecorvin.space/v2/api"
 );
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
 

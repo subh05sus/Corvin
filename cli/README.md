@@ -226,8 +226,8 @@ On subsequent runs, Corvin uses the existing configuration automatically.
 Override defaults by setting these in `~/.corvin/config` or as environment variables:
 
 ```bash
-API_BASE_URL=https://corvin-api.thatdevguy.in/v2/api
-WEB_SOCKET_URL=wss://corvin-api.thatdevguy.in/v2/ws
+API_BASE_URL=https://api.usecorvin.space/v2/api
+WEB_SOCKET_URL=wss://api.usecorvin.space/v2/ws
 CORVIN_CLUSTER_URL=ws://127.0.0.1:4466
 ```
 

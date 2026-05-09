@@ -372,7 +372,7 @@ cd demo/checkout-service && npm run build
 ```
 
 ### CLI can't connect to Corvin server
-The CLI defaults to `wss://corvin-api.thatdevguy.in/v2/ws` (the hosted service). To point it at your local server:
+The CLI defaults to `wss://api.usecorvin.space/v2/ws` (the hosted service). To point it at your local server:
 ```bash
 WEB_SOCKET_URL=ws://localhost:3000/v2/ws npx tsx start-ui.tsx
 ```

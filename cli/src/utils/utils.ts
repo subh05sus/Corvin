@@ -5,7 +5,7 @@ import path from "path";
 import { ensureConfigDir } from "../../helpers/cli-helpers.js";
 import { upsertConfigValue } from "../../helpers/config-helpers.js";
 //base api
-const API_BASE_URL = process.env.API_BASE_URL || "https://corvin-api.thatdevguy.in/v2/api";
+const API_BASE_URL = process.env.API_BASE_URL || "https://api.usecorvin.space/v2/api";
 
 //path of the config file
 const HOME_DIR = os.homedir();
