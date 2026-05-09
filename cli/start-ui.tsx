@@ -370,16 +370,15 @@ export const StartApp: React.FC = () => {
     };
   }, []);
 
+  const activeWindowId = activeProject?.window_id;
   useEffect(() => {
-    if (activeProject && activeProject.window_id) {
+    if (activeWindowId) {
       const timer = setTimeout(() => {
         connectWebSocket();
       }, 100);
       return () => clearTimeout(timer);
-    } else if (activeConnections.length === 0) {
-      logd("No active connections found. Waiting for services to register...");
     }
-  }, [connectWebSocket, activeProject, activeConnections.length]);
+  }, [connectWebSocket, activeWindowId]);
 
   useEffect(() => {
     const handleResize = () => {
