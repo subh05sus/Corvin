@@ -14,6 +14,6 @@ export const config = {
   ),
   web_dashboard_url: getConfigValue(
     "WEB_DASHBOARD_URL",
-    "http://localhost:3001"
+    "https://corvin.thatdevguy.in"
   ),
 };
