@@ -549,13 +549,21 @@ export function useWebSocket(
       scheduleReconnect();
     };
 
-    socket.onclose = () => {
-      setConnectionError(
-        buildConnectionErrorMessage("Connection closed. Reconnecting…")
-      );
+    socket.onclose = (event) => {
       setIsConnected(false);
       setIsLoading(false);
       socketRef.current = null;
+
+      if (event.code === 4401 || event.code === 4403) {
+        setConnectionError(
+          "Authentication failed. Run `corvin login` to obtain a valid API key."
+        );
+        return;
+      }
+
+      setConnectionError(
+        buildConnectionErrorMessage("Connection closed. Reconnecting…")
+      );
       scheduleReconnect();
     };
   }, [url, authKey, callSummarizeAPI]);

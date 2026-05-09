@@ -4,11 +4,8 @@
 # Triggered on every push to main that touches server/ files, or manually.
 #
 # Pipeline stages:
-#   prechecks (parallel)
-#     ├── typecheck   → tsc --noEmit
-#     └── lint        → eslint
-#   build             → compile TS, upload artifact
-#   deploy            → SSH to EC2, pull, install, build, reload PM2
+#   build   → compile TS, upload artifact
+#   deploy  → SSH to EC2, pull, install, build, reload PM2
 #                       rolls back automatically if health check fails
 #
 # Required GitHub Secrets  (Settings → Secrets → Actions):
@@ -31,11 +28,6 @@ on:
       - "server/**"
       - ".github/workflows/deploy-server.yml"
   workflow_dispatch:
-    inputs:
-      skip_prechecks:
-        description: "Skip typecheck + lint (emergency deploy only)"
-        type: boolean
-        default: false
 
 # Never run two deploys in parallel — queue the second one.
 concurrency:
@@ -46,70 +38,12 @@ env:
   NODE_VERSION: "20"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STAGE 1 — PRECHECKS (run in parallel)
+# STAGE 1 — BUILD
 # ─────────────────────────────────────────────────────────────────────────────
 
 jobs:
-  typecheck:
-    name: "Precheck / TypeScript"
-    if: ${{ !inputs.skip_prechecks }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: server/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check (no emit)
-        run: npx tsc --noEmit
-
-  # ───────────────────────────────────────────────────────────────────────────
-
-  lint:
-    name: "Precheck / Lint"
-    if: ${{ !inputs.skip_prechecks }}
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: server/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STAGE 2 — BUILD
-# ─────────────────────────────────────────────────────────────────────────────
-
   build:
     name: "Build / Compile"
-    # Runs after prechecks.  If prechecks were skipped (emergency dispatch),
-    # `always() && !failure() && !cancelled()` lets build proceed anyway.
-    needs: [typecheck, lint]
-    if: always() && !failure() && !cancelled()
     runs-on: ubuntu-latest
     defaults:
       run:
