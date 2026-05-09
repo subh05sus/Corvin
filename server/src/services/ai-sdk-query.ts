@@ -205,7 +205,7 @@ export async function generateTextFromMessages(
   options?: { system?: string; temperature?: number }
 ): Promise<string> {
   const google = createGoogleGenerativeAI({ apiKey: config.gemini_api_key });
-  const model = google("gemini-3-flash-preview");
+  const model = google("gemini-2.5-flash");
   const result = await generateText({
     model,
     messages,
@@ -229,7 +229,7 @@ export function runAISdkQuery(input: RunAISdkQueryInput) {
   const messages = userQueryObj.messages;
   const tools = createTools(authKey);
   const google = createGoogleGenerativeAI({ apiKey: config.gemini_api_key });
-  const model = google("gemini-3-flash-preview");
+  const model = google("gemini-2.5-flash");
 
   return streamText({
     model,
