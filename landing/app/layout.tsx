@@ -25,7 +25,7 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", spaceGrotesk.variable, playfairDisplayHeading.variable)}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
       </body>
     </html>
   )
