@@ -174,20 +174,20 @@ function TerminalDemo() {
   }, [logCount])
 
   return (
-    <div className="w-full border border-border bg-card font-mono text-xs mb-6">
+    <div className="w-full border border-border bg-card font-mono text-xs mb-16">
       {/* title bar */}
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-background/60">
-        <div className="flex gap-1.5">
-          <span className="w-3 h-3 block bg-border" />
-          <span className="w-3 h-3 block bg-border" />
-          <span className="w-3 h-3 block" style={{ background: "var(--primary)" }} />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 border-b border-border bg-background/60">
+        <div className="flex gap-1.5 shrink-0">
+          <span className="w-2.5 h-2.5 block bg-border" />
+          <span className="w-2.5 h-2.5 block bg-border" />
+          <span className="w-2.5 h-2.5 block" style={{ background: "var(--primary)" }} />
         </div>
-        <span className="text-muted-foreground text-[10px] tracking-wider ml-2">
-          corvin — local cluster
+        <span className="text-muted-foreground text-[10px] tracking-wider shrink-0 ml-2">
+          corvin
         </span>
-        <div className="ml-auto flex gap-4">
+        <div className="flex gap-3 ml-auto shrink-0">
           {Object.entries(SVC).map(([name, color]) => (
-            <span key={name} style={{ color, fontSize: 10 }}>● {name}</span>
+            <span key={name} className="text-[9px] sm:text-[10px]" style={{ color }}>● {name}</span>
           ))}
         </div>
       </div>
@@ -195,7 +195,7 @@ function TerminalDemo() {
       {/* split pane */}
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* logs */}
-        <div className="border-b md:border-b-0 md:border-r border-border flex flex-col" style={{ minHeight: 280 }}>
+        <div className="border-b md:border-b-0 md:border-r border-border flex flex-col" style={{ minHeight: 360 }}>
           <div className="px-5 py-2 border-b border-border text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50">
             live logs
           </div>
