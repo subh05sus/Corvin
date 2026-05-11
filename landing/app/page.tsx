@@ -193,9 +193,9 @@ function TerminalDemo() {
       </div>
 
       {/* split pane */}
-      <div className="grid grid-cols-2" style={{ minHeight: 400 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2">
         {/* logs */}
-        <div className="border-r border-border flex flex-col">
+        <div className="border-b md:border-b-0 md:border-r border-border flex flex-col" style={{ minHeight: 280 }}>
           <div className="px-5 py-2 border-b border-border text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50">
             live logs
           </div>
@@ -223,7 +223,7 @@ function TerminalDemo() {
         </div>
 
         {/* chat */}
-        <div className="flex flex-col">
+        <div className="flex flex-col" style={{ minHeight: 280 }}>
           <div className="px-5 py-2 border-b border-border text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50">
             debug chat
           </div>
@@ -337,10 +337,10 @@ export default function Page() {
       </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section className="max-w-[1280px] mx-auto px-8 md:px-14 pt-8">
+      <section className="max-w-[1280px] mx-auto px-3 sm:px-6 md:px-14 pt-3 md:pt-8">
 
         {/* framed image panel — contained within page padding */}
-        <div className="relative overflow-hidden" style={{ minHeight: "86vh" }}>
+        <div className="relative overflow-hidden" style={{ minHeight: "clamp(480px, 86vh, 920px)" }}>
 
           {/* cinematic background */}
           <img
@@ -359,17 +359,17 @@ export default function Page() {
             }}
           />
 
-          {/* structural frame inset */}
-          <div className="absolute pointer-events-none" style={{ inset: "20px", border: "1px solid rgba(255,255,255,0.07)" }} />
-          {/* corner accents */}
-          <div className="absolute pointer-events-none" style={{ top: 20, left: 20, width: 40, height: 40, borderTop: "1px solid rgba(255,255,255,0.2)", borderLeft: "1px solid rgba(255,255,255,0.2)" }} />
-          <div className="absolute pointer-events-none" style={{ top: 20, right: 20, width: 40, height: 40, borderTop: "1px solid rgba(255,255,255,0.2)", borderRight: "1px solid rgba(255,255,255,0.2)" }} />
-          <div className="absolute pointer-events-none" style={{ bottom: 20, left: 20, width: 40, height: 40, borderBottom: "1px solid rgba(255,255,255,0.2)", borderLeft: "1px solid rgba(255,255,255,0.2)" }} />
-          <div className="absolute pointer-events-none" style={{ bottom: 20, right: 20, width: 40, height: 40, borderBottom: "1px solid rgba(255,255,255,0.2)", borderRight: "1px solid rgba(255,255,255,0.2)" }} />
+          {/* structural frame inset — tighter on mobile */}
+          <div className="absolute pointer-events-none hidden sm:block" style={{ inset: "12px", border: "1px solid rgba(255,255,255,0.07)" }} />
+          {/* corner accents — smaller on mobile */}
+          <div className="absolute pointer-events-none" style={{ top: 12, left: 12, width: 24, height: 24, borderTop: "1px solid rgba(255,255,255,0.2)", borderLeft: "1px solid rgba(255,255,255,0.2)" }} />
+          <div className="absolute pointer-events-none" style={{ top: 12, right: 12, width: 24, height: 24, borderTop: "1px solid rgba(255,255,255,0.2)", borderRight: "1px solid rgba(255,255,255,0.2)" }} />
+          <div className="absolute pointer-events-none" style={{ bottom: 12, left: 12, width: 24, height: 24, borderBottom: "1px solid rgba(255,255,255,0.2)", borderLeft: "1px solid rgba(255,255,255,0.2)" }} />
+          <div className="absolute pointer-events-none" style={{ bottom: 12, right: 12, width: 24, height: 24, borderBottom: "1px solid rgba(255,255,255,0.2)", borderRight: "1px solid rgba(255,255,255,0.2)" }} />
 
           {/* content layer */}
           <div
-            className="relative z-10 flex flex-col items-center justify-center text-center px-10 md:px-14"
+            className="relative z-10 flex flex-col items-center justify-center text-center px-5 md:px-14"
             style={{ minHeight: "86vh" }}
           >
             <h1
@@ -429,7 +429,7 @@ export default function Page() {
       <Divider height={80} />
 
       {/* ── TERMINAL DEMO ─────────────────────────────────────────────────────── */}
-      <section className="fade-up-5 max-w-[1280px] mx-auto px-8 md:px-14 pt-16 pb-0">
+      <section className="fade-up-5 max-w-[1280px] mx-auto px-4 md:px-14 pt-10 md:pt-16 pb-0">
         <TerminalDemo />
       </section>
 
@@ -437,7 +437,7 @@ export default function Page() {
 
       {/* ── WORKFLOW — the 3-terminal setup ──────────────────────────────────── */}
       <section>
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-12 md:py-24">
 
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
             <h2
@@ -498,7 +498,7 @@ export default function Page() {
 
       {/* ── CAPABILITIES ─────────────────────────────────────────────────────── */}
       <section>
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-12 md:py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
             <h2
               className="font-heading text-foreground leading-[1.0] tracking-tight"
@@ -518,7 +518,7 @@ export default function Page() {
               <div
                 key={cap.n}
                 className="group border-b border-border py-5 grid items-start gap-x-8 gap-y-1"
-                style={{ gridTemplateColumns: "2.5rem 1fr auto" }}
+                style={{ gridTemplateColumns: "2.5rem 1fr" }}
               >
                 <span
                   className="font-mono text-[11px] tabular-nums pt-[3px]"
@@ -526,20 +526,22 @@ export default function Page() {
                 >
                   {cap.n}
                 </span>
-                <div>
-                  <div className="font-sans font-semibold text-foreground text-[15px] mb-1">
-                    {cap.title}
+                <div className="min-w-0">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="font-sans font-semibold text-foreground text-[15px] mb-1">
+                      {cap.title}
+                    </div>
+                    <span
+                      className="hidden sm:inline font-mono text-[10.5px] whitespace-nowrap opacity-60 group-hover:opacity-100 transition-opacity shrink-0"
+                      style={{ color: "var(--primary)" }}
+                    >
+                      {cap.cmd}
+                    </span>
                   </div>
                   <p className="font-sans text-muted-foreground text-[13px] leading-relaxed">
                     {cap.body}
                   </p>
                 </div>
-                <span
-                  className="font-mono text-[10.5px] whitespace-nowrap pt-[3px] opacity-60 group-hover:opacity-100 transition-opacity"
-                  style={{ color: "var(--primary)" }}
-                >
-                  {cap.cmd}
-                </span>
               </div>
             ))}
           </div>
@@ -550,7 +552,7 @@ export default function Page() {
 
       {/* ── REAL QUESTIONS ───────────────────────────────────────────────────── */}
       <section>
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-12 md:py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
             <h2
               className="font-heading text-foreground leading-[1.0] tracking-tight"
@@ -590,7 +592,7 @@ export default function Page() {
 
       {/* ── MULTI-SERVICE ─────────────────────────────────────────────────────── */}
       <section>
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-12 md:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-16 items-start">
 
             {/* left: explanation */}
@@ -666,7 +668,7 @@ name: "${cfg.name}"`}
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
       <section>
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-12 md:py-24">
           <h2
             className="font-heading text-foreground leading-[1.0] tracking-tight mb-16"
             style={{ fontSize: "clamp(36px, 4vw, 52px)" }}
@@ -713,7 +715,7 @@ name: "${cfg.name}"`}
 
       {/* ── STACK ────────────────────────────────────────────────────────────── */}
       <section>
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-12 md:py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
             <h2
               className="font-heading text-foreground leading-[1.0] tracking-tight"
@@ -751,7 +753,7 @@ name: "${cfg.name}"`}
 
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}
       <section>
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-28">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-16 md:py-28">
           <div className="max-w-[640px]">
             <h2
               className="font-heading text-foreground leading-[1.0] tracking-tight mb-6"
