@@ -3,6 +3,7 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Tick01Icon, Copy01Icon } from "@hugeicons/core-free-icons"
 import { useEffect, useState, useRef, useCallback } from "react"
+import Lenis from "lenis"
 
 // ─── data ─────────────────────────────────────────────────────────────────────
 
@@ -110,6 +111,25 @@ const STACKS = [
   { lang: "Ruby", cmd: "corvin bundle exec rails s" },
   { lang: "Any", cmd: "corvin <your-command>" },
 ]
+
+// ─── structural primitives ────────────────────────────────────────────────────
+
+const DIAG = "repeating-linear-gradient(-45deg, rgba(255,255,255,0.09), rgba(255,255,255,0.09) 1px, transparent 1px, transparent 10px)"
+
+function Divider({ height = 60 }: { height?: number }) {
+  return (
+    <div
+      aria-hidden
+      className="w-full pointer-events-none"
+      style={{
+        height,
+        backgroundImage: DIAG,
+        borderTop: "1px solid rgba(255,255,255,0.09)",
+        borderBottom: "1px solid rgba(255,255,255,0.09)",
+      }}
+    />
+  )
+}
 
 // ─── terminal demo ────────────────────────────────────────────────────────────
 
@@ -252,6 +272,21 @@ function TerminalDemo() {
 
 export default function Page() {
   const [copied, setCopied] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const lenis = new Lenis({ lerp: 0.1, smoothWheel: true })
+    let raf: number
+    const loop = (time: number) => { lenis.raf(time); raf = requestAnimationFrame(loop) }
+    raf = requestAnimationFrame(loop)
+    return () => { lenis.destroy(); cancelAnimationFrame(raf) }
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   function copy() {
     navigator.clipboard?.writeText(INSTALL)
@@ -260,97 +295,145 @@ export default function Page() {
   }
 
   return (
-    <div className="bg-background min-h-screen text-foreground overflow-x-hidden">
+    <div className="bg-background min-h-screen text-foreground overflow-x-clip relative 2xl:px-16">
+      {/* side rails — fixed 64px structural gutters, hidden below 1440px */}
+      <div aria-hidden className="pointer-events-none fixed top-0 bottom-0 left-0 hidden 2xl:block" style={{ width: "64px", backgroundImage: DIAG, borderRight: "1px solid rgba(255,255,255,0.05)" }} />
+      <div aria-hidden className="pointer-events-none fixed top-0 bottom-0 right-0 hidden 2xl:block" style={{ width: "64px", backgroundImage: DIAG, borderLeft: "1px solid rgba(255,255,255,0.05)" }} />
 
       {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/95">
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 h-[52px] flex items-center gap-4">
-          <span className="font-mono text-[20px] font-bold tracking-[0.06em] text-primary">
-            CORVIN
-          </span>
-          <span
-            className="font-mono text-[9px] tracking-[0.12em] px-2 py-0.5 border uppercase"
-            style={{
-              color: "var(--primary-dim)",
-              borderColor: "var(--primary-dim)",
-              background: "var(--primary-faint)",
-            }}
+      <nav
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          background: scrolled ? "rgba(8,10,8, 0.95)" : "transparent",
+        }}
+      >
+        <div className="max-w-[1280px] mx-auto px-8 md:px-14">
+          <div
+            className="flex items-center gap-4 h-[60px]"
+            style={{ borderBottom: !scrolled ? "none" : "1px solid rgba(255,255,255,0.06)" }}
           >
-            beta
-          </span>
-          <div className="ml-auto flex items-center gap-1">
-            <a
-              href="https://app.usecorvin.space"
-              className="ml-3 font-sans text-[13px] font-semibold px-5 py-2 text-primary-foreground transition-opacity hover:opacity-90"
-              style={{ background: "var(--primary)" }}
+            <span className="font-heading font-medium leading-none" style={{ fontSize: "32px", color: "var(--primary)", letterSpacing: "0.02em" }}>
+              Corvin
+            </span>
+            <span
+              className="font-mono text-[10px] tracking-[0.14em] px-1.5 py-px border uppercase self-center mt-1"
+              style={{ color: "var(--primary-dim)", borderColor: "rgba(255,255,255,0.08)", background: "transparent" }}
             >
-              Get started
-            </a>
+              beta
+            </span>
+            <div className="ml-auto">
+              <a
+                href="https://app.usecorvin.space"
+                className="font-heading text-[15px] tracking-[0.06em] px-4 py-2 transition-colors duration-150"
+                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--primary-dim)"; e.currentTarget.style.color = "var(--primary)" }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)" }}
+              >
+                Get started
+              </a>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section className="max-w-[1280px] mx-auto px-8 md:px-14 pt-20 pb-0">
-        {/* headline — Playfair Display, one decisive statement */}
-        <h1
-          className="fade-up-2 font-heading font-extrabold text-foreground leading-[1.0] tracking-tight mb-9"
-          style={{ fontSize: "clamp(54px, 7.5vw, 108px)", maxWidth: "12ch" }}
-        >
-          The bug is
-          <br /><span style={{ color: "var(--primary)" }}>in the code.</span>
-        </h1>
+      <section className="max-w-[1280px] mx-auto px-8 md:px-14 pt-8">
 
-        {/* body — one sentence, nothing more */}
-        <p
-          className="fade-up-3 font-sans text-muted-foreground leading-[1.80] mb-12"
-          style={{ fontSize: "clamp(15px, 1.5vw, 18px)", maxWidth: "50ch" }}
-        >
-          Corvin wraps your services, reads logs and source code in real-time,
-          and traces every failure down to the file and line number.
-        </p>
+        {/* framed image panel — contained within page padding */}
+        <div className="relative overflow-hidden" style={{ minHeight: "86vh" }}>
 
-        {/* install — quiet, no section label */}
-        <div className="fade-up-4 flex items-center border border-border mb-5">
-          <div className="flex-1 px-5 py-4 font-mono text-[13px] text-foreground/60 flex items-center gap-3 min-w-0">
-            <span style={{ color: "var(--primary)" }}>$</span>
-            <span className="truncate">{INSTALL}</span>
+          {/* cinematic background */}
+          <img
+            src="/0.webp"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-75"
+            style={{ transform: "scale(1.04)", transformOrigin: "center center" }}
+          />
+
+          {/* primary dark overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(to bottom, rgba(8,10,8,0.55) 0%, rgba(8,10,8,0.38) 50%, rgba(8,10,8,0.78) 100%)",
+            }}
+          />
+
+          {/* structural frame inset */}
+          <div className="absolute pointer-events-none" style={{ inset: "20px", border: "1px solid rgba(255,255,255,0.07)" }} />
+          {/* corner accents */}
+          <div className="absolute pointer-events-none" style={{ top: 20, left: 20, width: 40, height: 40, borderTop: "1px solid rgba(255,255,255,0.2)", borderLeft: "1px solid rgba(255,255,255,0.2)" }} />
+          <div className="absolute pointer-events-none" style={{ top: 20, right: 20, width: 40, height: 40, borderTop: "1px solid rgba(255,255,255,0.2)", borderRight: "1px solid rgba(255,255,255,0.2)" }} />
+          <div className="absolute pointer-events-none" style={{ bottom: 20, left: 20, width: 40, height: 40, borderBottom: "1px solid rgba(255,255,255,0.2)", borderLeft: "1px solid rgba(255,255,255,0.2)" }} />
+          <div className="absolute pointer-events-none" style={{ bottom: 20, right: 20, width: 40, height: 40, borderBottom: "1px solid rgba(255,255,255,0.2)", borderRight: "1px solid rgba(255,255,255,0.2)" }} />
+
+          {/* content layer */}
+          <div
+            className="relative z-10 flex flex-col items-center justify-center text-center px-10 md:px-14"
+            style={{ minHeight: "86vh" }}
+          >
+            <h1
+              className="fade-up-2 font-heading text-white leading-[1.0] tracking-tight mb-8"
+              style={{ fontSize: "clamp(54px, 7.5vw, 108px)", textShadow: "0 2px 40px rgba(0,0,0,0.5)" }}
+            >
+              The bug is
+              <br /><span style={{ color: "var(--primary)" }}>in the code.</span>
+            </h1>
+
+            <p
+              className="fade-up-3 font-sans leading-[1.80] mb-10"
+              style={{ fontSize: "clamp(14px, 1.4vw, 17px)", maxWidth: "46ch", color: "rgba(255,255,255,0.85)" }}
+            >
+              Corvin wraps your services, reads logs and source code in real-time,
+              and traces every failure down to the file and line number.
+            </p>
+
+            {/* install bar */}
+            <div
+              className="fade-up-4 flex items-center mb-5"
+              style={{ border: "1px solid rgba(255,255,255,0.12)", background: "rgba(0,0,0,0.55)", width: "420px", maxWidth: "100%" }}
+            >
+              <div className="flex-1 px-5 py-4 font-mono text-[13px] flex items-center gap-3 min-w-0" style={{ color: "rgba(255,255,255,0.55)" }}>
+                <span style={{ color: "var(--primary)" }}>$</span>
+                <span className="truncate">{INSTALL}</span>
+              </div>
+              <button
+                onClick={copy}
+                className="px-5 py-4 font-sans text-[11px] font-medium transition-colors duration-150 shrink-0"
+                style={{ borderLeft: "1px solid rgba(255,255,255,0.1)", color: copied ? "var(--primary)" : "rgba(255,255,255,0.25)" }}
+              >
+                {copied ? "copied ✓" : "copy"}
+              </button>
+            </div>
+
+            <div className="fade-up-4">
+              <a
+                href="https://app.usecorvin.space"
+                className="font-sans text-[13px] transition-colors duration-150"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+              >
+                Open app →
+              </a>
+            </div>
           </div>
-          <button
-            onClick={copy}
-            className="px-5 py-4 font-sans text-[11px] font-medium border-l border-border text-muted-foreground/25 hover:text-foreground transition-colors duration-150 shrink-0"
-          >
-            {copied ? "copied ✓" : "copy"}
-          </button>
-        </div>
 
-        <div className="fade-up-4 pb-6">
-          <a
-            href="https://app.usecorvin.space"
-            className="font-sans text-[13px] text-muted-foreground/40 hover:text-foreground transition-colors duration-150"
-          >
-            Open app →
-          </a>
+          {/* bottom fade into page */}
+          <div
+            className="absolute bottom-0 left-0 right-0 pointer-events-none"
+            style={{ height: "140px", background: "linear-gradient(to bottom, transparent, var(--background))" }}
+          />
         </div>
 
       </section>
+
+      <Divider height={80} />
 
       {/* ── TERMINAL DEMO ─────────────────────────────────────────────────────── */}
       <section className="fade-up-5 max-w-[1280px] mx-auto px-8 md:px-14 pt-16 pb-0">
         <TerminalDemo />
       </section>
 
-      {/* lime bloom below demo */}
-      <div
-        className="pointer-events-none"
-        style={{
-          height: 1,
-          background: "var(--primary)",
-          opacity: 0.12,
-          boxShadow: "0 0 120px 40px var(--primary)",
-          transform: "translateY(-1px)",
-        }}
-      />
+      <Divider height={60} />
 
       {/* ── WORKFLOW — the 3-terminal setup ──────────────────────────────────── */}
       <section>
@@ -411,8 +494,10 @@ export default function Page() {
         </div>
       </section>
 
+      <Divider height={60} />
+
       {/* ── CAPABILITIES ─────────────────────────────────────────────────────── */}
-      <section className="border-t border-border">
+      <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
             <h2
@@ -461,8 +546,10 @@ export default function Page() {
         </div>
       </section>
 
+      <Divider height={60} />
+
       {/* ── REAL QUESTIONS ───────────────────────────────────────────────────── */}
-      <section className="border-t border-border">
+      <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
             <h2
@@ -499,8 +586,10 @@ export default function Page() {
         </div>
       </section>
 
+      <Divider height={60} />
+
       {/* ── MULTI-SERVICE ─────────────────────────────────────────────────────── */}
-      <section className="border-t border-border">
+      <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-16 items-start">
 
@@ -573,8 +662,10 @@ name: "${cfg.name}"`}
         </div>
       </section>
 
+      <Divider height={60} />
+
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
-      <section className="border-t border-border">
+      <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <h2
             className="font-heading font-bold text-foreground leading-[1.0] tracking-tight mb-16"
@@ -618,8 +709,10 @@ name: "${cfg.name}"`}
         </div>
       </section>
 
+      <Divider height={60} />
+
       {/* ── STACK ────────────────────────────────────────────────────────────── */}
-      <section className="border-t border-border">
+      <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
             <h2
@@ -654,8 +747,10 @@ name: "${cfg.name}"`}
         </div>
       </section>
 
+      <Divider height={100} />
+
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <section className="border-t border-border">
+      <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-28">
           <div className="max-w-[640px]">
             <p
@@ -692,27 +787,50 @@ name: "${cfg.name}"`}
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-border">
-        <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-7 flex flex-wrap items-center justify-between gap-4">
+      <footer className="relative overflow-hidden" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+
+        {/* hands.png — full-bleed background overlay */}
+        <img
+          src="/hands.png"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none invert"
+          style={{ opacity: 1 }}
+        />
+
+        {/* center wordmark */}
+        <div className="relative flex flex-col items-center justify-center py-40 gap-4">
           <span
-            className="font-mono font-bold text-[13px] tracking-[0.06em]"
-            style={{ color: "var(--primary)" }}
+            className="font-heading font-bold leading-none"
+            style={{ fontSize: "clamp(64px, 10vw, 128px)", color: "var(--primary)", letterSpacing: "-0.02em" }}
           >
-            CORVIN
+            Corvin
           </span>
-          <span className="font-mono text-muted-foreground/40 text-[11px]">
-            © 2026 · local-first AI debugging
+          <span
+            className="font-mono text-[9px] tracking-[0.28em] uppercase"
+            style={{ color: "rgba(255,255,255,0.2)" }}
+          >
+            local-first AI debugging
           </span>
-          <div className="flex gap-6">
+        </div>
 
-            <a
-              href="https://x.com/that_webdev_guy"
-              className="font-sans text-muted-foreground/50 text-xs hover:text-foreground transition-colors"
-            >
-              X(Twitter)
-            </a>
-
-          </div>
+        {/* bottom meta bar */}
+        <div
+          className="relative max-w-[1280px] mx-auto px-8 md:px-14 py-5 flex flex-wrap items-center justify-between gap-4"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+        >
+          <span className="font-mono text-[10px]" style={{ color: "rgba(255,255,255,0.18)" }}>
+            © 2026
+          </span>
+          <a
+            href="https://x.com/that_webdev_guy"
+            className="font-sans text-[11px] transition-colors duration-150"
+            style={{ color: "rgba(255,255,255,0.22)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.22)")}
+          >
+            X(Twitter)
+          </a>
         </div>
       </footer>
 
