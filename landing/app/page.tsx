@@ -441,10 +441,10 @@ export default function Page() {
 
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
             <h2
-              className="font-heading font-bold text-foreground leading-[1.0] tracking-tight"
+              className="font-heading text-foreground leading-[1.0] tracking-tight"
               style={{ fontSize: "clamp(36px, 4vw, 52px)" }}
             >
-              The 3-terminal setup.
+              The 3-terminal <span style={{ color: "var(--primary)" }}>setup.</span>
             </h2>
             <p className="font-sans text-muted-foreground text-[14px] leading-relaxed max-w-[36ch] sm:text-right">
               One terminal runs the TUI and server.
@@ -501,7 +501,7 @@ export default function Page() {
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
             <h2
-              className="font-heading font-bold text-foreground leading-[1.0] tracking-tight"
+              className="font-heading text-foreground leading-[1.0] tracking-tight"
               style={{ fontSize: "clamp(36px, 4vw, 52px)" }}
             >
               Not a chatbot.
@@ -553,7 +553,7 @@ export default function Page() {
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
             <h2
-              className="font-heading font-bold text-foreground leading-[1.0] tracking-tight"
+              className="font-heading text-foreground leading-[1.0] tracking-tight"
               style={{ fontSize: "clamp(36px, 4vw, 52px)" }}
             >
               Ask it anything.
@@ -602,7 +602,7 @@ export default function Page() {
                 Multi-service
               </p>
               <h2
-                className="font-heading font-bold text-foreground leading-[1.0] tracking-tight mb-7"
+                className="font-heading text-foreground leading-[1.0] tracking-tight mb-7"
                 style={{ fontSize: "clamp(36px, 4vw, 52px)" }}
               >
                 One project.
@@ -668,7 +668,7 @@ name: "${cfg.name}"`}
       <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <h2
-            className="font-heading font-bold text-foreground leading-[1.0] tracking-tight mb-16"
+            className="font-heading text-foreground leading-[1.0] tracking-tight mb-16"
             style={{ fontSize: "clamp(36px, 4vw, 52px)" }}
           >
             Four commands.
@@ -716,10 +716,10 @@ name: "${cfg.name}"`}
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-24">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
             <h2
-              className="font-heading font-bold text-foreground leading-[1.0] tracking-tight"
+              className="font-heading text-foreground leading-[1.0] tracking-tight"
               style={{ fontSize: "clamp(32px, 3.5vw, 44px)" }}
             >
-              Works with your stack.
+              Works with <span style={{ color: "var(--primary)" }}>your</span> stack.
             </h2>
             <p className="font-sans text-muted-foreground text-[14px] leading-relaxed max-w-[36ch] sm:text-right">
               If the process writes to stdout, Corvin can wrap it.
@@ -753,14 +753,8 @@ name: "${cfg.name}"`}
       <section>
         <div className="max-w-[1280px] mx-auto px-8 md:px-14 py-28">
           <div className="max-w-[640px]">
-            <p
-              className="font-sans text-[11px] font-semibold tracking-[0.22em] uppercase mb-7"
-              style={{ color: "var(--primary)" }}
-            >
-              Open source
-            </p>
             <h2
-              className="font-heading font-bold text-foreground leading-[1.0] tracking-tight mb-6"
+              className="font-heading text-foreground leading-[1.0] tracking-tight mb-6"
               style={{ fontSize: "clamp(40px, 5vw, 64px)" }}
             >
               Ship faster.
