@@ -797,7 +797,7 @@ name: "${cfg.name}"`}
         {/* center wordmark */}
         <div className="relative flex flex-col items-center justify-center py-40 gap-4">
           <span
-            className="font-heading font-bold leading-none"
+            className="font-heading leading-none"
             style={{ fontSize: "clamp(64px, 10vw, 128px)", color: "var(--primary)", letterSpacing: "-0.02em" }}
           >
             Corvin
