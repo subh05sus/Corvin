@@ -62,6 +62,7 @@ GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 GITHUB_CLIENT_ID="..."
 GITHUB_CLIENT_SECRET="..."
+AI_KEY_ENC_SECRET="..."  # openssl rand -base64 32  (32-byte base64, required for BYOK AI keys)
 ```
 
 **`server/.env`** — already has placeholders; just supply your `GEMINI_API_KEY`. The `WEB_DASHBOARD_URL` defaults to `http://localhost:3001`.

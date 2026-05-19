@@ -19,13 +19,12 @@ class Config {
     this.redis_username = this.getStringValue(env.REDIS_USERNAME) || "";
     this.redis_password = this.getStringValue(env.REDIS_PASSWORD) || "";
     this.redis_port = this.getNumberValue(env.REDIS_PORT) || 6379;
-    this.gemini_api_key = this.getStringValue(env.GEMINI_API_KEY);
+    this.gemini_api_key = env.GEMINI_API_KEY?.trim() || "";
     this.minimum_cli_version = this.getStringValue(env.MINIMUM_CLI_VERSION) || "1.0.12";
     this.web_dashboard_url = env.WEB_DASHBOARD_URL?.trim() || "http://localhost:3001";
 
-    // Validate required configs
     if (!this.gemini_api_key) {
-      throw new Error("GEMINI_API_KEY is required");
+      console.warn("[config] GEMINI_API_KEY not set — server-level Gemini fallback disabled. Users must supply their own AI keys via the dashboard.");
     }
   }
 

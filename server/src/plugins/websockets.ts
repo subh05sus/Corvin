@@ -3,18 +3,20 @@ import fp from "fastify-plugin";
 import fastifyWebsocket from "@fastify/websocket";
 import type { WebSocket } from "ws";
 import { HashMapManager } from "../utils/hashmap";
-import { config } from "../config";
 import redisClient from "../utils/redis";
 import { runAISdkQuery, type CoreMessage } from "../services/ai-sdk-query";
+import { serverFallbackConfig, type ProviderConfig } from "../services/ai-provider";
 import socketManager from "../utils/socketManager";
 import { STATIC_USER_ID } from "../utils/constants";
-import { validateAuthKey } from "../utils/auth";
+import { validateAuthKey, invalidateAuthCache } from "../utils/auth";
 
 declare module "ws" {
   interface WebSocket {
     isAlive?: boolean;
     userId?: string;
     socketId?: string;
+    aiConfig?: ProviderConfig | null;
+    authKey?: string;
   }
 }
 
@@ -471,8 +473,8 @@ async function websocketPlugin(fastify: FastifyInstance, opts: object) {
             return;
           }
 
-          const userId = await validateAuthKey(msg.authKey);
-          if (!userId) {
+          const session = await validateAuthKey(msg.authKey);
+          if (!session) {
             sendToSocket(socket, {
               type: "auth_error",
               message:
@@ -483,7 +485,9 @@ async function websocketPlugin(fastify: FastifyInstance, opts: object) {
             return;
           }
 
-          socket.userId = userId;
+          socket.userId = session.userId;
+          socket.aiConfig = session.ai;
+          socket.authKey = msg.authKey;
           
           console.log(
             "[handleRecurringConnection] Setting socket for serviceId:",
@@ -533,12 +537,11 @@ async function websocketPlugin(fastify: FastifyInstance, opts: object) {
             return;
           }
 
-          const geminiKey = config.gemini_api_key;
-          if (!geminiKey || geminiKey === "undefined" || geminiKey.trim() === "") {
-            fastify.log.warn("[handleQuery] GEMINI_API_KEY is missing or invalid; AI SDK will fail");
+          const providerConfig = socket.aiConfig ?? serverFallbackConfig();
+          if (!providerConfig) {
             sendToSocket(socket, {
               type: "error",
-              message: "Server misconfiguration: GEMINI_API_KEY is not set. Please set GEMINI_API_KEY in the backend environment.",
+              message: "No AI provider configured. Add your API key at /dashboard/ai-keys or set GEMINI_API_KEY in the server environment.",
               ts: Date.now(),
             });
             return;
@@ -599,7 +602,7 @@ async function websocketPlugin(fastify: FastifyInstance, opts: object) {
           fastify.log.info("[handleQuery] Calling runAISdkQuery (Gemini request will start on first stream read)");
           const result = runAISdkQuery({
             userQueryObj,
-            authKey: msg.authKey,
+            providerConfig,
             abortSignal: abortController.signal,
           });
           fastify.log.info("[handleQuery] Consuming stream (waiting for first chunk from Gemini)");

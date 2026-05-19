@@ -54,6 +54,22 @@ model User {
   sessions        Session[]
   apiKeys         ApiKey[]
   cliAuthRequests CliAuthRequest[]
+  aiConfig        UserAiConfig?
+}
+
+model UserAiConfig {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  openaiKeyEnc    String?
+  anthropicKeyEnc String?
+  geminiKeyEnc    String?
+  defaultProvider String   @default("gemini")
+  defaultModel    String   @default("gemini-2.5-flash")
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
 }
 
 model VerificationToken {

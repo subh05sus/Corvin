@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -42,6 +43,9 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link href="/dashboard/ai-keys">
+            <Button variant="outline">AI provider keys</Button>
+          </Link>
           <NewKeyDialog />
           <form
             action={async () => {

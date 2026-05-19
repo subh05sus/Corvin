@@ -88,6 +88,25 @@ class SocketManager {
   public getCount(): number {
     return Object.keys(this.socketDict).length;
   }
+
+  /**
+   * Get all serviceIds owned by a userId.
+   * Requires that sockets have `userId` set (done in websockets.ts on recurring_connection).
+   */
+  public getServiceIdsByUser(userId: string): string[] {
+    return Object.entries(this.socketDict)
+      .filter(([_, socket]) => (socket as any).userId === userId)
+      .map(([key]) => key);
+  }
+
+  /**
+   * Check if a serviceId is owned by a given userId.
+   */
+  public isOwnedByUser(serviceId: string, userId: string): boolean {
+    const socket = this.socketDict[serviceId];
+    if (!socket) return false;
+    return (socket as any).userId === userId;
+  }
 }
 
 // Export the singleton instance

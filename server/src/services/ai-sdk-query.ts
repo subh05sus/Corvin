@@ -1,29 +1,19 @@
-/**
- * AI SDK query service – single-call agent with tools (replaces LangGraph for query path).
- * Uses streamText + tools + maxSteps.
- */
-
 import { streamText, generateText, tool } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
-import socketManager from "../utils/socketManager";
-import redisClient from "../utils/redis";
 import { config } from "../config";
+import { resolveModel, serverFallbackConfig, type ProviderConfig } from "./ai-provider";
+import { sendAndPoll } from "./tool-bridge";
 
-/** Max tool-calling steps before stopping (same idea as AI SDK default). */
 export const MAX_STEPS = 20;
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
-/** Build single system prompt from answerNode style + logs/architecture context. */
 export function buildSystemPrompt(options: {
   logs: string;
   architecture: string;
   serviceId: string;
 }): string {
   const { logs, architecture, serviceId } = options;
-  const original = `You are Corvin, a CLI tool built for debugging across multiple services.
+  return `You are Corvin, a CLI tool built for debugging across multiple services.
 You are a software developer with a skillset of debugging. You are very good at investigation.
 You look at problems from multiple angles. Pull all the data you need and then come up with answers.
 The user is expecting your help with debugging and coming up with answers.
@@ -62,50 +52,11 @@ Keep it short; expand only if needed. Prefer:
 4. One or two lines about the fix
 5. Why this fixes the issue
 If the answer does not involve code changes, give a simple answer and skip the above structure.`;
-
-  return original;
 }
 
-export function createTools(authKey?: string): Record<string, ReturnType<typeof tool>> {
+export function createTools(): Record<string, ReturnType<typeof tool>> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tools: Record<string, any> = {};
-  const sendAndPoll = async (
-    serviceId: string,
-    functionName: string,
-    args: Record<string, unknown>,
-    timeoutMs: number = 60000
-  ): Promise<string> => {
-    const key = serviceId.trim();
-    const socket = socketManager.getSocket(key);
-    if (!socket) {
-      console.log("[ai-sdk-query] No socket for service", key);
-      return "";
-    }
-    const toolCallId = `${functionName}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const payload = {
-      type: "tool_function_call",
-      function_name: functionName,
-      args,
-      tool_call_id: toolCallId,
-    };
-    socket.send(JSON.stringify(payload));
-    const pollInterval = 200;
-    let elapsed = 0;
-    while (elapsed < timeoutMs) {
-      try {
-        const result = await redisClient.get(toolCallId);
-        if (result) {
-          await redisClient.del(toolCallId);
-          return result;
-        }
-      } catch (e) {
-        console.error(`[ai-sdk-query] Redis poll error:`, e);
-      }
-      await sleep(pollInterval);
-      elapsed += pollInterval;
-    }
-    return `Tool call timed out after ${timeoutMs}ms.`;
-  };
 
   tools.thinkTool = tool({
     description: `Tool for strategic reflection. Use after each search to analyze results and plan next steps. Use before calling other tools to plan, and after tool calls to assess progress. Do not call thinkTool in parallel with other tools.`,
@@ -114,9 +65,9 @@ export function createTools(authKey?: string): Record<string, ReturnType<typeof 
     }),
     execute: async ({ reflection }) => `Reflection recorded: ${reflection}`,
   });
+
   tools.grepCodeBasetool = tool({
-    description:
-      "Grep the codebase to find files that may contain the code you're looking for. Use readFileContents after this to read file contents. Returns matching line and path.",
+    description: "Grep the codebase to find files that may contain the code you're looking for. Use readFileContents after this to read file contents. Returns matching line and path.",
     parameters: z.object({
       serviceId: z.string().describe("ID of the service whose code you want to search."),
       searchTerm: z.string().describe("Search term for the file and line number."),
@@ -124,6 +75,7 @@ export function createTools(authKey?: string): Record<string, ReturnType<typeof 
     execute: async ({ serviceId, searchTerm }) =>
       sendAndPoll(serviceId, "grep_search", { searchTerm, max_results: 20 }, 60000),
   });
+
   tools.readFileContents = tool({
     description: "Read file contents from the codebase. Get lines before and after a line number.",
     parameters: z.object({
@@ -136,6 +88,7 @@ export function createTools(authKey?: string): Record<string, ReturnType<typeof 
     execute: async ({ serviceId, filePath, lineNumber, before = 30, after = 30 }) =>
       sendAndPoll(serviceId, "read_file", { filePath, lineNumber, before, after }, 10000),
   });
+
   tools.readLogs = tool({
     description: "Read logs of the service (paginated, 50 lines per page). Prefer tailLogs/grepLogs/getRecentErrors; don't call readLogs more than 3 times.",
     parameters: z.object({
@@ -145,6 +98,7 @@ export function createTools(authKey?: string): Record<string, ReturnType<typeof 
     execute: async ({ serviceId, pageNumber }) =>
       sendAndPoll(serviceId, "read_logs", { pageNumber, max_results: 20 }, 60000),
   });
+
   tools.tailLogs = tool({
     description: "Last N lines from the in-memory logs. Use when you want to see what just happened.",
     parameters: z.object({
@@ -154,6 +108,7 @@ export function createTools(authKey?: string): Record<string, ReturnType<typeof 
     execute: async ({ serviceId, n }) =>
       sendAndPoll(serviceId, "tail_logs", { n }, 60000),
   });
+
   tools.grepLogs = tool({
     description: "Search in-memory logs for a pattern; returns each match with surrounding context (like grep -A/-B).",
     parameters: z.object({
@@ -165,6 +120,7 @@ export function createTools(authKey?: string): Record<string, ReturnType<typeof 
     execute: async ({ serviceId, pattern, before = 5, after = 5 }) =>
       sendAndPoll(serviceId, "grep_logs", { pattern, before, after }, 60000),
   });
+
   tools.getRecentErrors = tool({
     description: "Most recent N log lines containing ERROR, WARN, FATAL, EXCEPTION, etc.",
     parameters: z.object({
@@ -174,10 +130,10 @@ export function createTools(authKey?: string): Record<string, ReturnType<typeof 
     execute: async ({ serviceId, n }) =>
       sendAndPoll(serviceId, "get_recent_errors", { n }, 60000),
   });
+
   return tools;
 }
 
-/** AI SDK–native message format (what streamText expects). Client sends messages in this shape. */
 export type CoreMessage =
   | { role: "user"; content: string }
   | { role: "assistant"; content: string | Array<{ type: "text"; text: string } | { type: "tool-call"; toolCallId: string; toolName: string; args: unknown }> }
@@ -185,7 +141,6 @@ export type CoreMessage =
   | { role: "tool"; content: Array<{ type: "tool-result"; toolCallId: string; toolName: string; result: unknown }> };
 
 export interface RunAISdkQueryInput {
-  /** Client sends messages in the native AI SDK pattern (CoreMessage[]). */
   userQueryObj: {
     messages: CoreMessage[];
     logs: string;
@@ -193,19 +148,17 @@ export interface RunAISdkQueryInput {
     serviceId: string;
     planningDoc?: string;
   };
-  authKey?: string;
+  providerConfig?: ProviderConfig | null;
   abortSignal?: AbortSignal;
 }
 
-/**
- * Generate text from CoreMessage[] (no tools). Used by v2 graph and summarize API.
- */
 export async function generateTextFromMessages(
   messages: CoreMessage[],
-  options?: { system?: string; temperature?: number }
+  options?: { system?: string; temperature?: number; providerConfig?: ProviderConfig | null }
 ): Promise<string> {
-  const google = createGoogleGenerativeAI({ apiKey: config.gemini_api_key });
-  const model = google("gemini-2.5-flash");
+  const cfg = options?.providerConfig ?? serverFallbackConfig();
+  if (!cfg) throw new Error("No AI provider configured. Add your API key at /dashboard/ai-keys.");
+  const model = resolveModel(cfg);
   const result = await generateText({
     model,
     messages,
@@ -215,26 +168,28 @@ export async function generateTextFromMessages(
   return typeof result.text === "string" ? result.text : "";
 }
 
-/**
- * Run a single AI SDK streamText call with system prompt, messages, and tools.
- * Caller should iterate result.fullStream and send AI SDK–friendly chunks over WebSocket.
- */
 export function runAISdkQuery(input: RunAISdkQueryInput) {
-  const { userQueryObj, authKey, abortSignal } = input;
+  const { userQueryObj, providerConfig, abortSignal } = input;
+
+  const cfg = providerConfig ?? serverFallbackConfig();
+  if (!cfg) {
+    throw new Error("No AI provider configured. Add your API key at /dashboard/ai-keys.");
+  }
+
   const systemPrompt = buildSystemPrompt({
     logs: userQueryObj.logs,
     architecture: userQueryObj.architecture,
     serviceId: userQueryObj.serviceId,
   });
-  const messages = userQueryObj.messages;
-  const tools = createTools(authKey);
-  const google = createGoogleGenerativeAI({ apiKey: config.gemini_api_key });
-  const model = google("gemini-2.5-flash");
+  const model = resolveModel(cfg);
+  const tools = createTools();
+
+  console.log(`[ai-sdk-query] using ${cfg.provider}/${cfg.model}`);
 
   return streamText({
     model,
     system: systemPrompt,
-    messages,
+    messages: userQueryObj.messages,
     tools,
     maxSteps: MAX_STEPS,
     abortSignal,
