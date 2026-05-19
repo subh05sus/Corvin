@@ -318,7 +318,7 @@ function MCPShowcase() {
   "mcpServers": {
     "corvin": {
       "type": "http",
-      "url": "http://localhost:3000/v2/mcp",
+      "url": "https://api.usecorvin.space/v2/mcp",
       "headers": {
         "Authorization": "Bearer <api-key>"
       }
@@ -510,11 +510,10 @@ export default function Page() {
               <a
                 href="/mcp"
                 className="font-mono text-[11px] tracking-[0.1em] px-3 py-1.5 transition-colors duration-150 flex items-center gap-1.5"
-                style={{ border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)" }}
+                style={{ color: "rgba(255,255,255,0.35)" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--primary-dim)"; e.currentTarget.style.color = "var(--primary)" }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.35)" }}
               >
-                <span style={{ color: "var(--primary)", opacity: 0.7 }}>⬡</span>
                 MCP
               </a>
               <a

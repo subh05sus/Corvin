@@ -39,7 +39,7 @@ const CLIENTS = [
   "mcpServers": {
     "corvin": {
       "type": "http",
-      "url": "http://localhost:3000/v2/mcp",
+      "url": "https://api.usecorvin.space/v2/mcp",
       "headers": {
         "Authorization": "Bearer <your-api-key>"
       }
@@ -48,7 +48,7 @@ const CLIENTS = [
 }`,
     cli: `claude mcp add --transport http \\
   --header "Authorization: Bearer <key>" \\
-  corvin http://localhost:3000/v2/mcp`,
+  corvin https://api.usecorvin.space/v2/mcp`,
     note: "Or add via CLI command above. The server can be local or remote (use HTTPS for production).",
   },
   {
@@ -58,7 +58,7 @@ const CLIENTS = [
     config: `{
   "mcpServers": {
     "corvin": {
-      "url": "http://localhost:3000/v2/mcp",
+      "url": "https://api.usecorvin.space/v2/mcp",
       "headers": {
         "Authorization": "Bearer <your-api-key>"
       }
@@ -76,7 +76,7 @@ const CLIENTS = [
   "servers": {
     "corvin": {
       "type": "http",
-      "url": "http://localhost:3000/v2/mcp",
+      "url": "https://api.usecorvin.space/v2/mcp",
       "headers": {
         "Authorization": "Bearer <your-api-key>"
       }
@@ -93,7 +93,7 @@ const CLIENTS = [
     config: `{
   "mcpServers": {
     "corvin": {
-      "url": "http://localhost:3000/v2/mcp",
+      "url": "https://api.usecorvin.space/v2/mcp",
       "headers": {
         "Authorization": "Bearer <your-api-key>"
       }
@@ -176,12 +176,12 @@ export default function McpPage() {
             <div className="ml-auto flex items-center gap-3">
               <a
                 href="/"
-                className="font-mono text-[11px] tracking-[0.08em] transition-colors duration-150"
+                className="font-mono text-[11px] px-2 tracking-[0.08em] transition-colors duration-150"
                 style={{ color: "rgba(255,255,255,0.3)" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
               >
-                ← Home
+                Home
               </a>
               <a
                 href="https://app.usecorvin.space"
@@ -435,7 +435,7 @@ export default function McpPage() {
               },
               {
                 title: "Local by default",
-                body: "The MCP server runs on your machine at localhost:3000. Nothing is forwarded to a third party. Use HTTPS + a reverse proxy for remote access.",
+                body: "The MCP server runs on your machine at api.usecorvin.space. Nothing is forwarded to a third party. Use HTTPS + a reverse proxy for remote access.",
               },
             ].map((item) => (
               <div key={item.title} className="border-r border-b border-border px-8 py-10">
@@ -479,15 +479,6 @@ export default function McpPage() {
                 style={{ background: "var(--primary)" }}
               >
                 Get started →
-              </a>
-              <a
-                href="/"
-                className="font-sans text-[13px] transition-colors duration-150"
-                style={{ color: "rgba(255,255,255,0.3)" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
-              >
-                ← Back to Corvin
               </a>
             </div>
           </div>
