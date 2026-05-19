@@ -112,6 +112,22 @@ const STACKS = [
   { lang: "Any", cmd: "corvin <your-command>" },
 ]
 
+const MCP_CLIENTS = [
+  "Claude Code",
+  "Claude Desktop",
+  "VS Code Copilot",
+  "Cursor",
+  "Antigravity",
+]
+
+const MCP_CHAT = [
+  { r: "user", t: "What's causing the 502 in checkout? Check logs and source." },
+  { r: "tool", t: "corvin:tailLogs", d: "checkout · last 50 lines" },
+  { r: "tool", t: "corvin:grepCodeBase", d: '"processPayment" src/' },
+  { r: "tool", t: "corvin:readFileContents", d: "src/index.ts · :40–58" },
+  { r: "ai", t: "PAYMENT_TIMEOUT is hardcoded to 3000ms at src/index.ts:47. Stripe 3DS auth averages 3.8–4.2s — every 3DS payment races the timeout.\n\nFix: set PAYMENT_TIMEOUT=6000 in checkout/.env" },
+]
+
 // ─── structural primitives ────────────────────────────────────────────────────
 
 const DIAG = "repeating-linear-gradient(-45deg, rgba(255,255,255,0.09), rgba(255,255,255,0.09) 1px, transparent 1px, transparent 10px)"
@@ -268,6 +284,175 @@ function TerminalDemo() {
   )
 }
 
+// ─── mcp showcase ─────────────────────────────────────────────────────────────
+
+function MCPShowcase() {
+  const [chatCount, setChatCount] = useState(0)
+  const [phase, setPhase] = useState<"idle" | "running" | "pause">("idle")
+
+  const reset = useCallback(() => { setChatCount(0); setPhase("idle") }, [])
+
+  useEffect(() => {
+    if (phase !== "idle") return
+    const t = setTimeout(() => setPhase("running"), 800)
+    return () => clearTimeout(t)
+  }, [phase])
+
+  useEffect(() => {
+    if (phase !== "running") return
+    let j = 0
+    const t = setInterval(() => {
+      j++; setChatCount(j)
+      if (j >= MCP_CHAT.length) { clearInterval(t); setPhase("pause") }
+    }, 900)
+    return () => clearInterval(t)
+  }, [phase])
+
+  useEffect(() => {
+    if (phase !== "pause") return
+    const t = setTimeout(reset, 5000)
+    return () => clearTimeout(t)
+  }, [phase, reset])
+
+  const CONFIG = `{
+  "mcpServers": {
+    "corvin": {
+      "type": "http",
+      "url": "http://localhost:3000/v2/mcp",
+      "headers": {
+        "Authorization": "Bearer <api-key>"
+      }
+    }
+  }
+}`
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+
+      {/* left: demo terminal */}
+      <div className="border border-border bg-card font-mono text-xs">
+        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-background/60">
+          <div className="flex gap-1.5">
+            <span className="w-2.5 h-2.5 block bg-border" />
+            <span className="w-2.5 h-2.5 block bg-border" />
+            <span className="w-2.5 h-2.5 block" style={{ background: "var(--primary)" }} />
+          </div>
+          <span className="text-muted-foreground text-[10px] tracking-wider ml-2">claude — Claude Code</span>
+          <span
+            className="ml-auto font-mono text-[9px] tracking-[0.14em] px-1.5 py-px border uppercase"
+            style={{ color: "var(--primary)", borderColor: "var(--primary-dim)", background: "var(--primary-faint)" }}
+          >
+            MCP
+          </span>
+        </div>
+
+        <div className="no-scrollbar overflow-y-auto py-4 px-5 flex flex-col gap-3" style={{ minHeight: 320 }}>
+          {MCP_CHAT.slice(0, chatCount).map((msg, i) => {
+            if (msg.r === "user") return (
+              <div key={i} className="flex gap-2 items-start">
+                <span className="text-primary font-bold shrink-0 mt-px">›</span>
+                <span className="text-foreground/90 leading-[1.65]">{msg.t}</span>
+              </div>
+            )
+            if (msg.r === "tool") return (
+              <div key={i} className="flex gap-2 items-start opacity-50">
+                <span className="shrink-0 mt-[3px] text-[9px]" style={{ color: "var(--primary)" }}>⬡</span>
+                <span className="text-muted-foreground text-[10.5px] leading-[1.65]">
+                  <span className="text-foreground/55">{msg.t}</span>{"  "}{msg.d}
+                </span>
+              </div>
+            )
+            if (msg.r === "ai") return (
+              <div
+                key={i}
+                className="border border-primary/20 bg-primary/5 text-foreground/85 leading-[1.72] text-[11px] p-3 whitespace-pre-line"
+              >
+                {msg.t}
+              </div>
+            )
+            return null
+          })}
+          {(phase === "running" || phase === "idle") && chatCount === 0 && (
+            <div className="flex gap-2 items-center opacity-30">
+              <span className="text-primary">›</span>
+              <span
+                className="blink inline-block w-[5px] h-[11px]"
+                style={{ background: "var(--primary)" }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* right: config + client list */}
+      <div className="flex flex-col gap-8">
+        <div>
+          <p
+            className="font-sans text-[11px] font-semibold tracking-[0.22em] uppercase mb-5"
+            style={{ color: "var(--primary)" }}
+          >
+            One config. Any client.
+          </p>
+          <h3
+            className="font-heading text-foreground leading-[1.05] tracking-tight mb-5"
+            style={{ fontSize: "clamp(28px, 3vw, 40px)" }}
+          >
+            Ask Claude Code about
+            <br /><span style={{ color: "var(--primary)" }}>your running services.</span>
+          </h3>
+          <p className="font-sans text-muted-foreground text-[14px] leading-[1.78] max-w-[44ch]">
+            Add Corvin as an MCP server. Every tool call — tail logs, grep code, read files — runs against your actual live services.
+            No context window pasting. No manual log copying.
+          </p>
+        </div>
+
+        {/* config block */}
+        <div className="border border-border bg-card">
+          <div className="px-4 py-2 border-b border-border flex items-center justify-between">
+            <span className="font-mono text-[10px] text-muted-foreground/40 tracking-wide">.claude/settings.json</span>
+            <span className="font-mono text-[9px] tracking-[0.14em] uppercase" style={{ color: "var(--primary)", opacity: 0.5 }}>Claude Code</span>
+          </div>
+          <pre className="px-5 py-4 font-mono text-[11.5px] leading-[1.85] overflow-auto" style={{ color: "oklch(0.6 0.05 150)" }}>
+            {CONFIG}
+          </pre>
+        </div>
+
+        {/* supported clients */}
+        <div>
+          <p className="font-mono text-[10px] text-muted-foreground/30 tracking-[0.18em] uppercase mb-4">
+            Supported clients
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {MCP_CLIENTS.map((c) => (
+              <span
+                key={c}
+                className="font-mono text-[10.5px] px-2.5 py-1 border"
+                style={{
+                  borderColor: "rgba(255,255,255,0.07)",
+                  color: "rgba(255,255,255,0.35)",
+                  background: "rgba(255,255,255,0.02)",
+                }}
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <a
+          href="/mcp"
+          className="font-sans text-[13px] transition-colors duration-150 self-start flex items-center gap-1.5"
+          style={{ color: "var(--primary)", opacity: 0.7 }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = "1" }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = "0.7" }}
+        >
+          Full MCP setup guide →
+        </a>
+      </div>
+    </div>
+  )
+}
+
 // ─── page ─────────────────────────────────────────────────────────────────────
 
 export default function Page() {
@@ -321,7 +506,17 @@ export default function Page() {
             >
               beta
             </span>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-3">
+              <a
+                href="/mcp"
+                className="font-mono text-[11px] tracking-[0.1em] px-3 py-1.5 transition-colors duration-150 flex items-center gap-1.5"
+                style={{ border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--primary-dim)"; e.currentTarget.style.color = "var(--primary)" }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.35)" }}
+              >
+                <span style={{ color: "var(--primary)", opacity: 0.7 }}>⬡</span>
+                MCP
+              </a>
               <a
                 href="https://app.usecorvin.space"
                 className="font-heading text-[15px] tracking-[0.06em] px-4 py-2 transition-colors duration-150"
@@ -545,6 +740,41 @@ export default function Page() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <Divider height={60} />
+
+      {/* ── MCP SHOWCASE ──────────────────────────────────────────────────────── */}
+      <section>
+        <div className="max-w-[1280px] mx-auto px-4 md:px-14 py-12 md:py-24">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-14">
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <span
+                  className="font-mono text-[9px] tracking-[0.2em] px-2 py-0.5 border uppercase"
+                  style={{ color: "var(--primary)", borderColor: "var(--primary-dim)", background: "var(--primary-faint)" }}
+                >
+                  MCP server
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground/30">
+                  Model Context Protocol
+                </span>
+              </div>
+              <h2
+                className="font-heading text-foreground leading-[1.0] tracking-tight"
+                style={{ fontSize: "clamp(36px, 4vw, 52px)" }}
+              >
+                Your AI client.
+                <br /><span style={{ color: "var(--primary)" }}>Corvin's tools.</span>
+              </h2>
+            </div>
+            <p className="font-sans text-muted-foreground text-[14px] leading-relaxed max-w-[38ch] sm:text-right">
+              Connect Claude Code, Cursor, or any MCP client directly to your running services.
+              Ask about bugs without leaving your editor.
+            </p>
+          </div>
+          <MCPShowcase />
         </div>
       </section>
 
