@@ -1,7 +1,7 @@
 # Corvin Server
 
 <p align="center">
-  <a href="https://corvin.dev">
+  <a href="https://usecorvin.space">
     <img src="assets/corvin-logo.png" alt="Corvin Logo" width="400">
   </a>
 </p>
@@ -301,7 +301,7 @@ The codebase is designed to be hackable:
 
 - [GitHub Issues](https://github.com/corvin-ai/server/issues)
 - [CLI Repository](https://github.com/corvin-ai/cli)
-- [Documentation](https://docs.corvin.dev)
+- [Documentation](https://docs.usecorvin.space)
 
 ---
 

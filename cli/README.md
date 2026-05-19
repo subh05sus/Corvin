@@ -1,7 +1,7 @@
 # Corvin
 
 <p align="center">
-  <a href="https://corvin.dev">
+  <a href="https://usecorvin.space">
     <img src="https://raw.githubusercontent.com/subh05sus/Corvin/main/cli/assets/corvin-logo.png" alt="Corvin" width="500">
   </a>
 </p>
@@ -37,7 +37,7 @@ npm install -g corvin-cli
 corvin
 ```
 
-You'll be prompted to log in and paste an API key from [app.corvin.dev](https://app.corvin.dev).
+You'll be prompted to log in and paste an API key from [app.usecorvin.space](https://app.usecorvin.space).
 
 **Start debugging:**
 
@@ -122,7 +122,7 @@ Logs are streamed to the server only when the AI needs them to answer your quest
 
 **API key authentication**
 
-All requests are authenticated with your personal API key from [app.corvin.dev](https://app.corvin.dev).
+All requests are authenticated with your personal API key from [app.usecorvin.space](https://app.usecorvin.space).
 
 ---
 

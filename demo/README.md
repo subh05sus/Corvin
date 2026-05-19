@@ -126,7 +126,7 @@ git clone https://github.com/USERNAME/REPO
 cd REPO
 npm run install:all && npm run build:all
 
-# Get your auth key from https://corvin.dev
+# Get your auth key from https://usecorvin.space
 debug login <your-auth-key>
 
 npm run demo
@@ -221,7 +221,7 @@ npm run demo
 This demo uses a shared Corvin account (rate-limited).
 
 **For production use:**
-1. Sign up at [corvin.dev](https://corvin.dev)
+1. Sign up at [usecorvin.space](https://usecorvin.space)
 2. Get your auth key
 3. Run: `debug login <your-key>`
 4. Connect to your own services: `debug npm run dev`

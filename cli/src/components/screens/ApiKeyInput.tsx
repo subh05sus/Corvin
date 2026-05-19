@@ -77,11 +77,11 @@ const ApiKeyInput: React.FC = () => {
       )}
       <Box paddingY={1} flexDirection="column">
         <Text>If you don’t have a key yet:</Text>
-        <Text color={"#2F5BFF"}>https://corvin.dev/dashboard</Text>
+        <Text color={"#2F5BFF"}>https://usecorvin.space/dashboard</Text>
       </Box>
       <Box flexDirection="column">
         <Text>How to run Corvin locally:</Text>
-        <Text color={"#2F5BFF"}>https://docs.corvin.dev/local-setup</Text>
+        <Text color={"#2F5BFF"}>https://docs.usecorvin.space/local-setup</Text>
       </Box>
     </OnboardingLayout>
   );
